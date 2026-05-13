@@ -21,6 +21,7 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 - Admin panel (rakija CRUD, users, promotions queue)
 - PWA (manifest, service worker, offline page)
 - Toast notifications
+- **UI/UX редизайн "Modern Craft"** — бели карти, Playfair Display serif, SVG fruit icons, нов score badge, NazdraveButton с pop анимация, нов AppHeader, BottomNav pill indicator, Login hero екран
 
 ### 🔴 Pending — next session pick-up point
 
@@ -46,7 +47,6 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 | L3 | Годишен преглед (Wrapped) | L | pending |
 
 **Known issues / tech debt:**
-- `src/app/api/ratings/route.ts` line ~107: pre-existing TypeScript error about `RejectExcessProperties` on the `.update()` call — does not affect runtime, but tsc reports it
 - Feed currently shows all users' ratings, not filtered to friends only (intentional for now, revisit when user base grows)
 - Badges are computed client-side from fetched ratings — no DB table, no triggers needed. This is fine up to ~500 ratings per user.
 
@@ -56,18 +56,23 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 
 | Token | Hex | Usage |
 |---|---|---|
-| `oak` | `#3B2008` | Primary text |
-| `walnut` | `#7A5230` | Buttons, active states |
-| `accent` | `#C4956A` | Secondary text, borders |
+| `oak` | `#2C1810` | Primary text |
+| `walnut` | `#6B4423` | Buttons, active states |
+| `accent` | `#C8956D` | Secondary text, borders |
 | `cream` | `#EDD9C0` | Backgrounds, chips |
-| `background` | `#FAF3E8` | Page background |
-| `gold` | `#D4A853` | Scores, ratings |
-| `verified` | `#5C8A5C` | Verified badge |
+| `background` | `#FBF5EC` | Page background |
+| `gold` | `#C8882A` | Scores, ratings |
+| `verified` | `#3D7A3D` | Verified badge |
+| `muted` | `#8A7968` | Tertiary text, placeholders |
 
-Design style: **glassmorphism** — `rgba(255,255,255,0.45)` + `backdrop-filter: blur(20px) saturate(1.6)`.
-CSS classes: `.card`, `.input`, `.btn-primary`, `.label`, `.text-gradient`, `.animate-slide-up`, `.animate-fade-in`.
+Design style: **Modern Craft** — бели карти (`#FFFFFF`) с фин shadow върху топъл кремав фон. Glassmorphism само за sticky header-и (`.glass-panel`).
+CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.label`, `.text-gradient`, `.animate-slide-up`, `.animate-fade-in`, `.animate-nazdrave`, `.stagger-1/2/3/4`.
 
 **Important mobile gotcha:** `background-attachment: fixed` is disabled on iOS/Android. The body background uses `scroll` instead, with stronger opacity values to compensate.
+
+**Fonts:** Playfair Display (serif) за заглавия/имена на напитки — `font-serif` Tailwind клас. Зарежда се чрез `<link>` в `layout.tsx` (не в globals.css — `postcss-import` не поддържа remote URLs). Inter за body текст.
+
+**Hydration gotcha:** Не използвай `{condition && <element>}` в компоненти, чиято `condition` зависи от `usePathname()` или друг routing hook — може да предизвика SSR/client mismatch. Ползвай `opacity` или `visibility` вместо conditional render за такива случаи.
 
 ---
 
