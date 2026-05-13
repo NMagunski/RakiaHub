@@ -102,9 +102,11 @@ export async function POST(req: NextRequest) {
   let ratingId: string;
 
   if (existing) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase RejectExcessProperties rejects valid update payload
     const { data: updated, error } = await supabase
       .from("ratings")
-      .update(ratingPayload)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      .update(ratingPayload as never)
       .eq("id", existing.id)
       .select("id")
       .single();

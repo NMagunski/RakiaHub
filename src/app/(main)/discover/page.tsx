@@ -79,13 +79,12 @@ export default function DiscoverPage() {
     <div className="flex flex-col">
       {/* Sticky header: search + filters */}
       <div
-        className="sticky top-0 z-30 px-4 pt-4 pb-3 flex flex-col gap-2"
-        style={{ background: "rgba(240,223,192,0.70)", backdropFilter: "blur(20px) saturate(1.6)", WebkitBackdropFilter: "blur(20px) saturate(1.6)" }}
+        className="sticky top-0 z-30 px-4 pt-4 pb-3 flex flex-col gap-2 glass-panel"
       >
         {/* Search bar */}
         <div
           className="flex items-center gap-2 rounded-2xl px-4 py-3"
-          style={{ background: "rgba(255,255,255,0.50)", border: "1px solid rgba(255,255,255,0.60)", boxShadow: "0 2px 12px rgba(59,32,8,0.08)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+          style={{ background: "rgba(255,255,255,0.85)", border: "1px solid rgba(44,24,16,0.09)", boxShadow: "0 1px 6px rgba(44,24,16,0.06)" }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5 shrink-0 text-accent">
             <circle cx="11" cy="11" r="7" />
@@ -114,8 +113,8 @@ export default function DiscoverPage() {
                 onClick={() => setActiveFruit(active ? null : opt.value)}
                 className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all"
                 style={active
-                  ? { background: "linear-gradient(135deg,#7A5230,#3B2008)", color: "#EDD9C0", boxShadow: "0 2px 8px rgba(122,82,48,0.30)" }
-                  : { background: "rgba(255,255,255,0.55)", color: "#7A5230", border: "1px solid rgba(255,255,255,0.60)" }
+                  ? { background: "linear-gradient(135deg,#6B4423,#2C1810)", color: "#FFFFFF", boxShadow: "0 2px 10px rgba(107,68,35,0.35)" }
+                  : { background: "rgba(255,255,255,0.90)", color: "#6B4423", border: "1px solid rgba(44,24,16,0.12)" }
                 }
               >
                 {opt.label}
@@ -132,7 +131,7 @@ export default function DiscoverPage() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortBy)}
               className="appearance-none rounded-xl pl-3 pr-7 py-1.5 text-xs font-medium text-walnut focus:outline-none cursor-pointer"
-              style={{ background: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.60)" }}
+              style={{ background: "rgba(255,255,255,0.90)", border: "1px solid rgba(44,24,16,0.12)" }}
             >
               {SORT_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
@@ -148,8 +147,8 @@ export default function DiscoverPage() {
             onClick={() => setVerifiedOnly((v) => !v)}
             className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all"
             style={verifiedOnly
-              ? { background: "rgba(92,138,92,0.15)", color: "#5C8A5C", border: "1px solid rgba(92,138,92,0.35)" }
-              : { background: "rgba(255,255,255,0.55)", color: "#7A5230", border: "1px solid rgba(255,255,255,0.60)" }
+              ? { background: "rgba(61,122,61,0.12)", color: "#3D7A3D", border: "1px solid rgba(61,122,61,0.30)" }
+              : { background: "rgba(255,255,255,0.90)", color: "#6B4423", border: "1px solid rgba(44,24,16,0.12)" }
             }
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">

@@ -9,25 +9,19 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+  const [loading, setLoading]   = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
-
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        setError("Невалиден имейл или парола.");
-        setLoading(false);
-        return;
-      }
-
+      if (error) { setError("Невалиден имейл или парола."); setLoading(false); return; }
       router.push("/feed");
       router.refresh();
     } catch (err) {
@@ -37,27 +31,48 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6" style={{ background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212,168,83,0.14) 0%, #FAF3E8 70%)" }}>
-      <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-walnut shadow-md">
-            <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8" aria-hidden>
-              <path d="M9 3h6M10 3v2.5c0 .5-.5 1-1 1.5L7 9v11a1 1 0 001 1h8a1 1 0 001-1V9l-2-2c-.5-.5-1-1-1-1.5V3"
-                stroke="#EDD9C0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M7 14h10" stroke="#EDD9C0" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-oak">RakiaHub</h1>
-            <p className="mt-1 text-sm text-walnut">Влез в профила си</p>
-          </div>
+    <main
+      className="flex min-h-screen flex-col"
+      style={{
+        background: "linear-gradient(175deg, #F5EAD5 0%, #FBF5EC 45%, #FBF5EC 100%)",
+      }}
+    >
+      {/* Hero */}
+      <div className="flex flex-col items-center justify-center px-6 pt-16 pb-10">
+        {/* Logo mark */}
+        <div
+          className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
+          style={{
+            background: "linear-gradient(145deg, #6B4423 0%, #2C1810 100%)",
+            boxShadow: "0 8px 32px rgba(107,68,35,0.35), 0 2px 8px rgba(44,24,16,0.20)",
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden>
+            <path
+              d="M9 3h6M10 3v2.5c0 .5-.4 1-.9 1.4L7.5 8.5V20a1 1 0 001 1h7a1 1 0 001-1V8.5L14.9 6.9C14.4 6.5 14 6 14 5.5V3"
+              stroke="#EDD9C0"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path d="M7.5 14h9" stroke="#EDD9C0" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </div>
 
+        <h1 className="font-serif font-bold text-oak text-center" style={{ fontSize: "1.75rem", lineHeight: 1.25 }}>
+          Открий вкуса<br />на България
+        </h1>
+        <p className="mt-2 text-center text-sm font-medium" style={{ color: "#8A7968" }}>
+          Оцени, събери и сподели всяка глътка ракия
+        </p>
+      </div>
+
+      {/* Form card */}
+      <div className="flex-1 rounded-t-3xl px-6 pt-8 pb-10" style={{ background: "#FFFFFF", boxShadow: "0 -4px 40px rgba(44,24,16,0.08)" }}>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Email */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-oak" htmlFor="email">
-              Имейл
-            </label>
+            <label className="label" htmlFor="email">Имейл</label>
             <input
               id="email"
               type="email"
@@ -67,41 +82,84 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="input"
               placeholder="you@example.com"
+              inputMode="email"
             />
           </div>
 
+          {/* Password */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-oak" htmlFor="password">
-              Парола
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-              placeholder="••••••••"
-            />
+            <label className="label" htmlFor="password">Парола</label>
+            <div className="relative">
+              <input
+                id="password"
+                type={showPass ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input pr-12"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
+                style={{ color: "#8A7968" }}
+                aria-label={showPass ? "Скрий паролата" : "Покажи паролата"}
+              >
+                {showPass ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
+          {/* Error */}
           {error && (
-            <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
+            <div
+              className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+              style={{ background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.18)", color: "#9B2C2C" }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mt-0.5 shrink-0">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary mt-2"
-          >
-            {loading ? "Влизане…" : "Влез"}
+          <button type="submit" disabled={loading} className="btn-primary mt-2">
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+                </svg>
+                Влизане…
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                Влез в профила
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
+            )}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-walnut">
+        <p className="mt-6 text-center text-sm" style={{ color: "#8A7968" }}>
           Нямаш профил?{" "}
-          <Link href="/register" className="font-semibold text-walnut underline">
+          <Link href="/register" className="font-semibold text-walnut underline underline-offset-2">
             Регистрирай се
           </Link>
         </p>
