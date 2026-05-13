@@ -3,25 +3,145 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #FAF3E8;
+  --foreground: #3B2008;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: #F0DFC0;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  overscroll-behavior: none;
+  background:
+    radial-gradient(ellipse 140% 55% at 50% -5%, rgba(212,168,83,0.55) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 65% at 110% 100%, rgba(122,82,48,0.30) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 55% at -10% 65%, rgba(196,149,106,0.28) 0%, transparent 50%),
+    linear-gradient(160deg, #FAF0D8 0%, #F5E8CC 50%, #EDD9B8 100%);
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* Safe area insets */
+.safe-top    { padding-top: env(safe-area-inset-top); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Bottom sheet slide-up */
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.30s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.28s ease-out both;
+}
+
+/* ── Glassmorphism card ─────────────────────────────── */
+.card {
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 4px 24px rgba(59, 32, 8, 0.10),
+    0 1px 0 rgba(255,255,255,0.90) inset;
+}
+
+.card-xl {
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    0 4px 24px rgba(59, 32, 8, 0.10),
+    0 1px 0 rgba(255,255,255,0.90) inset;
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #3B2008 0%, #7A5230 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom range slider */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    #D4A853 0%,
+    #D4A853 calc((var(--val, 7) - 1) / 9 * 100%),
+    #EDD9C0 calc((var(--val, 7) - 1) / 9 * 100%),
+    #EDD9C0 100%
+  );
+  outline: none;
+  cursor: pointer;
+}
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7A5230 0%, #3B2008 100%);
+  box-shadow: 0 2px 12px rgba(122, 82, 48, 0.40);
+  cursor: grab;
+}
+.slider::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7A5230 0%, #3B2008 100%);
+  border: none;
+  box-shadow: 0 2px 12px rgba(122, 82, 48, 0.40);
+  cursor: grab;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-xl px-4 py-3 text-sm text-oak placeholder:text-accent/50 focus:outline-none transition-all;
+    background: rgba(255,255,255,0.50);
+    border: 1px solid rgba(255,255,255,0.60);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    box-shadow: 0 2px 8px rgba(59,32,8,0.06), 0 1px 0 rgba(255,255,255,0.80) inset;
+  }
+  .input:focus {
+    background: rgba(255,255,255,0.72);
+    border-color: rgba(122,82,48,0.60);
+    box-shadow: 0 0 0 3px rgba(122,82,48,0.10), 0 2px 8px rgba(59,32,8,0.06);
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide;
+    color: rgba(122,82,48,0.70);
+  }
+  .btn-primary {
+    @apply w-full rounded-xl py-3.5 text-sm font-semibold text-cream transition-all active:scale-[0.98] disabled:opacity-60;
+    background: linear-gradient(135deg, #7A5230 0%, #3B2008 100%);
+    box-shadow: 0 4px 20px rgba(122, 82, 48, 0.38);
+  }
+  .btn-primary:not(:disabled):hover {
+    box-shadow: 0 6px 24px rgba(122, 82, 48, 0.48);
   }
 }
