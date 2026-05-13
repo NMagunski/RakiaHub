@@ -9,11 +9,25 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [error, setError]       = useState<string | null>(null);
-  const [loading, setLoading]   = useState(false);
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
+  const [showPass, setShowPass]     = useState(false);
+  const [error, setError]           = useState<string | null>(null);
+  const [loading, setLoading]       = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
+  async function handleForgot(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    });
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setForgotSent(true);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,7 +83,55 @@ export default function LoginPage() {
 
       {/* Form card */}
       <div className="flex-1 rounded-t-3xl px-6 pt-8 pb-10" style={{ background: "#FFFFFF", boxShadow: "0 -4px 40px rgba(44,24,16,0.08)" }}>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+
+        {/* Forgot password mode */}
+        {forgotMode && (
+          forgotSent ? (
+            <div className="flex flex-col items-center gap-4 py-6 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: "rgba(61,122,61,0.12)" }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#3D7A3D" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </div>
+              <p className="font-semibold text-oak">Провери имейла си</p>
+              <p className="text-sm text-muted">Изпратихме линк за възстановяване на паролата.</p>
+              <button onClick={() => { setForgotMode(false); setForgotSent(false); }} className="text-sm font-semibold text-walnut underline underline-offset-2">
+                Обратно към вход
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleForgot} className="flex flex-col gap-4">
+              <div>
+                <p className="mb-4 text-sm text-muted">Въведи имейла си и ще ти изпратим линк за нова парола.</p>
+                <label className="label" htmlFor="forgot-email">Имейл</label>
+                <input
+                  id="forgot-email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="input"
+                  placeholder="you@example.com"
+                  inputMode="email"
+                  autoComplete="email"
+                />
+              </div>
+              {error && (
+                <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(192,57,43,0.08)", color: "#9B2C2C" }}>
+                  {error}
+                </div>
+              )}
+              <button type="submit" disabled={loading} className="btn-primary">
+                {loading ? "Изпращане…" : "Изпрати линк"}
+              </button>
+              <button type="button" onClick={() => { setForgotMode(false); setError(null); }} className="text-sm text-muted underline underline-offset-2">
+                Обратно към вход
+              </button>
+            </form>
+          )
+        )}
+
+        {!forgotMode && <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Email */}
           <div>
             <label className="label" htmlFor="email">Имейл</label>
@@ -88,7 +150,12 @@ export default function LoginPage() {
 
           {/* Password */}
           <div>
-            <label className="label" htmlFor="password">Парола</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="label mb-0" htmlFor="password">Парола</label>
+              <button type="button" onClick={() => { setForgotMode(true); setError(null); }} className="text-xs font-medium text-walnut underline underline-offset-2">
+                Забравена парола?
+              </button>
+            </div>
             <div className="relative">
               <input
                 id="password"
@@ -155,14 +222,16 @@ export default function LoginPage() {
               </span>
             )}
           </button>
-        </form>
+        </form>}
 
-        <p className="mt-6 text-center text-sm" style={{ color: "#8A7968" }}>
-          Нямаш профил?{" "}
-          <Link href="/register" className="font-semibold text-walnut underline underline-offset-2">
-            Регистрирай се
-          </Link>
-        </p>
+        {!forgotMode && (
+          <p className="mt-6 text-center text-sm" style={{ color: "#8A7968" }}>
+            Нямаш профил?{" "}
+            <Link href="/register" className="font-semibold text-walnut underline underline-offset-2">
+              Регистрирай се
+            </Link>
+          </p>
+        )}
       </div>
     </main>
   );

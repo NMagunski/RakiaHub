@@ -6,6 +6,8 @@ import Image from "next/image";
 import NazdraveButton from "./NazdraveButton";
 import FruitIcon from "@/components/ui/FruitIcon";
 
+import type { Reactor } from "@/lib/queries/feed";
+
 type Props = {
   rating: {
     id: string;
@@ -13,13 +15,17 @@ type Props = {
     aroma_tags: string[] | null;
     taste_tags: string[] | null;
     finish_tags: string[] | null;
+    color_tags: string[] | null;
+    aroma_note: string | null;
+    taste_note: string | null;
+    finish_note: string | null;
     venue_name: string | null;
     notes: string | null;
     created_at: string;
     rakija: { id: string; name: string; producer: string | null; fruit: string | null; type: string } | null;
     profiles: { id: string; username: string; avatar_url: string | null } | null;
   };
-  reactions: { count: number; user_reacted: boolean };
+  reactions: { count: number; user_reacted: boolean; reactors: Reactor[] };
   currentUserId: string;
   onDelete?: (id: string) => void;
 };
@@ -60,7 +66,8 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
     ...(rating.aroma_tags ?? []),
     ...(rating.taste_tags ?? []),
     ...(rating.finish_tags ?? []),
-  ].slice(0, 4);
+    ...(rating.color_tags ?? []),
+  ].slice(0, 5);
 
   const dateStr = new Date(rating.created_at).toLocaleDateString("bg-BG", {
     day: "numeric", month: "short",
@@ -124,11 +131,32 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
         </div>
       )}
 
-      {/* Note */}
+      {/* General note */}
       {rating.notes && (
         <p className="px-4 pb-3.5 text-sm italic leading-relaxed line-clamp-2" style={{ color: "#8A7968" }}>
           &ldquo;{rating.notes}&rdquo;
         </p>
+      )}
+
+      {/* Detail notes (aroma / taste / finish) */}
+      {(rating.aroma_note || rating.taste_note || rating.finish_note) && (
+        <div className="mx-4 mb-3.5 space-y-1 rounded-xl px-3 py-2.5" style={{ background: "rgba(107,68,35,0.05)", border: "1px solid rgba(107,68,35,0.09)" }}>
+          {rating.aroma_note && (
+            <p className="text-xs leading-relaxed" style={{ color: "#6B4423" }}>
+              <span className="font-semibold">Аромат: </span>{rating.aroma_note}
+            </p>
+          )}
+          {rating.taste_note && (
+            <p className="text-xs leading-relaxed" style={{ color: "#6B4423" }}>
+              <span className="font-semibold">Вкус: </span>{rating.taste_note}
+            </p>
+          )}
+          {rating.finish_note && (
+            <p className="text-xs leading-relaxed" style={{ color: "#6B4423" }}>
+              <span className="font-semibold">Финал: </span>{rating.finish_note}
+            </p>
+          )}
+        </div>
       )}
 
       {/* Footer */}
@@ -141,6 +169,7 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
           initialCount={reactions.count}
           initialReacted={reactions.user_reacted}
           userId={currentUserId}
+          reactors={reactions.reactors}
         />
 
         {onDelete && rating.profiles?.id === currentUserId && (

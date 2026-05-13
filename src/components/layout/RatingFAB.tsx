@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
 const RatingBottomSheet = dynamic(() => import("@/components/rating/RatingBottomSheet"), {
@@ -10,16 +10,28 @@ const RatingBottomSheet = dynamic(() => import("@/components/rating/RatingBottom
 export default function RatingFAB() {
   const [open, setOpen] = useState(false);
   const [tilted, setTilted] = useState(false);
+  const [initialQuery, setInitialQuery] = useState("");
 
   function handleClick() {
     setTilted(true);
     setTimeout(() => {
       setTilted(false);
+      setInitialQuery("");
       setOpen(true);
     }, 350);
 
     if (navigator.vibrate) navigator.vibrate(30);
   }
+
+  useEffect(() => {
+    function onOpenSheet(e: Event) {
+      const query = (e as CustomEvent<{ query?: string }>).detail?.query ?? "";
+      setInitialQuery(query);
+      setOpen(true);
+    }
+    window.addEventListener("open-rating-sheet", onOpenSheet);
+    return () => window.removeEventListener("open-rating-sheet", onOpenSheet);
+  }, []);
 
   return (
     <>
@@ -35,7 +47,7 @@ export default function RatingFAB() {
         <BottleIcon />
       </button>
 
-      {open && <RatingBottomSheet onClose={() => setOpen(false)} />}
+      {open && <RatingBottomSheet onClose={() => { setOpen(false); setInitialQuery(""); }} initialQuery={initialQuery} />}
     </>
   );
 }

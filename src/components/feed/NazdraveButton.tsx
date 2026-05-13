@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import type { Reactor } from "@/lib/queries/feed";
 
 type Props = {
   ratingId: string;
   initialCount: number;
   initialReacted: boolean;
   userId: string;
+  reactors?: Reactor[];
 };
 
 function GlassIcon({ filled, className }: { filled: boolean; className?: string }) {
@@ -38,12 +41,14 @@ function GlassIcon({ filled, className }: { filled: boolean; className?: string 
   );
 }
 
-export default function NazdraveButton({ ratingId, initialCount, initialReacted, userId }: Props) {
+export default function NazdraveButton({ ratingId, initialCount, initialReacted, userId, reactors = [] }: Props) {
   const supabase = createClient();
-  const [reacted, setReacted]   = useState(initialReacted);
-  const [count, setCount]       = useState(initialCount);
-  const [loading, setLoading]   = useState(false);
-  const [popping, setPopping]   = useState(false);
+  const [reacted, setReacted]       = useState(initialReacted);
+  const [count, setCount]           = useState(initialCount);
+  const [loading, setLoading]       = useState(false);
+  const [popping, setPopping]       = useState(false);
+  const [showReactors, setShowReactors] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   async function toggle() {
     if (loading) return;
@@ -66,22 +71,69 @@ export default function NazdraveButton({ ratingId, initialCount, initialReacted,
   }
 
   return (
-    <button
-      onClick={toggle}
-      disabled={!userId}
-      className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition-all active:scale-95 ${popping ? "animate-nazdrave" : ""}`}
-      style={reacted ? {
-        background: "linear-gradient(135deg, #6B4423, #2C1810)",
-        color: "#FFFFFF",
-        boxShadow: "0 2px 12px rgba(107,68,35,0.35)",
-      } : {
-        background: "rgba(107,68,35,0.08)",
-        color: "#6B4423",
-        border: "1.5px solid rgba(107,68,35,0.18)",
-      }}
-    >
-      <GlassIcon filled={reacted} className="h-4.5 w-4.5 h-[18px] w-[18px] shrink-0" />
-      <span>Наздраве{count > 0 && <span className={`ml-1 tabular-nums ${reacted ? "text-white/80" : "text-walnut/70"}`}>{count}</span>}</span>
-    </button>
+    <div className="relative flex items-center gap-1">
+      <button
+        onClick={toggle}
+        disabled={!userId}
+        className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition-all active:scale-95 ${popping ? "animate-nazdrave" : ""}`}
+        style={reacted ? {
+          background: "linear-gradient(135deg, #6B4423, #2C1810)",
+          color: "#FFFFFF",
+          boxShadow: "0 2px 12px rgba(107,68,35,0.35)",
+        } : {
+          background: "rgba(107,68,35,0.08)",
+          color: "#6B4423",
+          border: "1.5px solid rgba(107,68,35,0.18)",
+        }}
+      >
+        <GlassIcon filled={reacted} className="h-[18px] w-[18px] shrink-0" />
+        <span>Наздраве</span>
+      </button>
+
+      {/* Count — separate tap target that opens reactor list */}
+      {count > 0 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowReactors((v) => !v); }}
+          className="rounded-full px-2 py-1 text-xs font-bold tabular-nums transition-colors"
+          style={{ color: reacted ? "#6B4423" : "rgba(107,68,35,0.65)", background: "rgba(107,68,35,0.07)" }}
+        >
+          {count}
+        </button>
+      )}
+
+      {/* Reactor popover */}
+      {showReactors && reactors.length > 0 && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setShowReactors(false)} />
+          <div
+            ref={popoverRef}
+            className="absolute bottom-full left-0 z-20 mb-2 min-w-[160px] rounded-2xl p-2"
+            style={{
+              background: "#FFFFFF",
+              boxShadow: "0 4px 24px rgba(44,24,16,0.14), 0 1px 4px rgba(44,24,16,0.08)",
+              border: "1px solid rgba(44,24,16,0.08)",
+            }}
+          >
+            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#8A7968" }}>
+              Наздраве от
+            </p>
+            {reactors.map((r) => (
+              <div key={r.username} className="flex items-center gap-2 rounded-xl px-2 py-1.5">
+                <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full" style={{ background: "rgba(107,68,35,0.10)" }}>
+                  {r.avatar_url ? (
+                    <Image src={r.avatar_url} alt={r.username} width={24} height={24} className="object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-[10px] font-bold text-walnut">
+                      {r.username[0].toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs font-medium text-oak">@{r.username}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }

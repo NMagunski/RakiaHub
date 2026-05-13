@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { getFeed, getReactionCounts, type FeedRating } from "@/lib/queries/feed";
+import { getFeed, getReactionCounts, type FeedRating, type Reactor } from "@/lib/queries/feed";
 import RatingCard from "@/components/feed/RatingCard";
 
 const PULL_THRESHOLD = 72;
@@ -10,7 +10,7 @@ const PULL_THRESHOLD = 72;
 export default function FeedPage() {
   const supabase = createClient();
   const [items, setItems] = useState<FeedRating[]>([]);
-  const [reactionMap, setReactionMap] = useState<Record<string, { count: number; user_reacted: boolean }>>({});
+  const [reactionMap, setReactionMap] = useState<Record<string, { count: number; user_reacted: boolean; reactors: Reactor[] }>>({});
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,7 +113,7 @@ export default function FeedPage() {
             <RatingCard
               key={item.id}
               rating={item}
-              reactions={reactionMap[item.id] ?? { count: 0, user_reacted: false }}
+              reactions={reactionMap[item.id] ?? { count: 0, user_reacted: false, reactors: [] }}
               currentUserId={userId ?? ""}
               onDelete={deleteRating}
             />

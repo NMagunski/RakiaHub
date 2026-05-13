@@ -103,15 +103,13 @@ export async function POST(req: NextRequest) {
 
   if (existing) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase RejectExcessProperties rejects valid update payload
-    const { data: updated, error } = await supabase
+    const { error } = await supabase
       .from("ratings")
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       .update(ratingPayload as never)
-      .eq("id", existing.id)
-      .select("id")
-      .single();
+      .eq("id", existing.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    ratingId = updated.id;
+    ratingId = existing.id;
   } else {
     const { data: inserted, error } = await supabase
       .from("ratings")
@@ -123,6 +121,36 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ id: ratingId });
+}
+
+export async function PATCH(req: NextRequest) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id, aroma_tags, taste_tags, finish_tags, color_tags, aroma_note, taste_note, finish_note, venue_name, notes, is_private } = await req.json();
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("ratings")
+    .update({
+      aroma_tags: aroma_tags ?? null,
+      taste_tags: taste_tags ?? null,
+      finish_tags: finish_tags ?? null,
+      color_tags: color_tags ?? null,
+      aroma_note: aroma_note ?? null,
+      taste_note: taste_note ?? null,
+      finish_note: finish_note ?? null,
+      venue_name: venue_name ?? null,
+      notes: notes ?? null,
+      is_private: is_private ?? false,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest) {

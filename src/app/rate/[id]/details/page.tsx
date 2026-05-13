@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { AROMA_TAGS, TASTE_TAGS, FINISH_TAGS, COLOR_TAGS } from "@/types/app";
 
 type TagSection = {
@@ -21,7 +20,6 @@ const SECTIONS: TagSection[] = [
 
 export default function RatingDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const supabase = createClient();
   const ratingId = params.id;
 
   const [tags, setTags] = useState<Record<string, string[]>>({
@@ -33,6 +31,7 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
   const [venueName, setVenueName] = useState("");
   const [generalNote, setGeneralNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   function toggleTag(field: string, tag: string) {
     setTags((prev) => {
@@ -48,9 +47,13 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
 
   async function handleSave() {
     setSaving(true);
-    const { error } = await supabase
-      .from("ratings")
-      .update({
+    setSaveError(null);
+
+    const res = await fetch("/api/ratings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: ratingId,
         aroma_tags: tags.aroma_tags.length ? tags.aroma_tags : null,
         taste_tags: tags.taste_tags.length ? tags.taste_tags : null,
         finish_tags: tags.finish_tags.length ? tags.finish_tags : null,
@@ -60,15 +63,19 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
         finish_note: notes.finish_note || null,
         venue_name: venueName || null,
         notes: generalNote || null,
-      })
-      .eq("id", ratingId);
+      }),
+    });
 
-    if (!error) {
-      router.push("/feed");
-      router.refresh();
-    } else {
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      setSaveError((j as { error?: string }).error ?? "Грешка при запис.");
       setSaving(false);
+      return;
     }
+
+    window.dispatchEvent(new Event("rating-saved"));
+    router.push("/feed");
+    router.refresh();
   }
 
   return (
@@ -140,6 +147,11 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
 
       {/* Fixed save button */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-accent/20 bg-background px-4 py-4 safe-bottom">
+        {saveError && (
+          <p className="mb-3 rounded-xl px-4 py-2 text-sm" style={{ background: "rgba(192,57,43,0.08)", color: "#9B2C2C" }}>
+            {saveError}
+          </p>
+        )}
         <button
           onClick={handleSave}
           disabled={saving}

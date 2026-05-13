@@ -27,6 +27,9 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [tab, setTab] = useState<"history" | "settings">("history");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [newPw, setNewPw]         = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [pwSaving, setPwSaving]   = useState(false);
   const { show: showToast } = useToast();
 
   useEffect(() => {
@@ -113,6 +116,18 @@ export default function ProfilePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
+  }
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault();
+    if (newPw.length < 6)        { showToast("Минимум 6 символа", "error"); return; }
+    if (newPw !== confirmPw)     { showToast("Паролите не съвпадат", "error"); return; }
+    setPwSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    setPwSaving(false);
+    if (error) { showToast(error.message, "error"); return; }
+    showToast("Паролата е сменена ✓");
+    setNewPw(""); setConfirmPw("");
   }
 
   async function handleSignOut() {
@@ -337,6 +352,35 @@ export default function ProfilePage() {
             </div>
             <button type="submit" disabled={saving} className="btn-primary">
               {saving ? "Запазване…" : "Запази промените"}
+            </button>
+          </form>
+
+          {/* Change password */}
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-3 border-t border-accent/10 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-accent">Смяна на парола</p>
+            <input
+              type="password"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              className="input"
+              placeholder="Нова парола"
+              autoComplete="new-password"
+              minLength={6}
+            />
+            <input
+              type="password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              className="input"
+              placeholder="Потвърди паролата"
+              autoComplete="new-password"
+            />
+            <button
+              type="submit"
+              disabled={pwSaving || !newPw || !confirmPw}
+              className="btn-primary"
+            >
+              {pwSaving ? "Запазване…" : "Смени паролата"}
             </button>
           </form>
 

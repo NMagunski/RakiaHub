@@ -17,7 +17,7 @@ export async function searchRakija(client: Client, query: string, options?: Sear
     .from("rakija")
     .select("id, name, producer, fruit, region, country, type, abv, global_rating, rating_count, is_verified")
     .in("type", ["commercial", "personal"])
-    .order(sortBy, { ascending: sortBy === "name" })
+    .order(sortBy, { ascending: sortBy === "name", nullsFirst: false })
     .limit(40);
 
   if (q) {

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { createClient } from "@/lib/supabase/server";
 import { getRakijaById } from "@/lib/queries/rakija";
 import { notFound } from "next/navigation";
@@ -11,6 +13,19 @@ const FRUIT_BG: Record<string, string> = {
   mixed: "Смесена", other: "Друга",
 };
 
+const TAG_LABELS: Record<string, string> = {
+  // aroma
+  fruity: "Плодово", plum: "Слива", apricot: "Кайсия", oaky: "Дъбово",
+  floral: "Цветно", spirity: "Спиртово", earthy: "Земно", honey: "Мед", vanilla: "Ванилия",
+  // taste
+  sweet: "Сладко", dry: "Сухо", smooth: "Мек", sharp: "Остър",
+  balanced: "Балансиран", buttery: "Масленост", spicy: "Пикантно", bitter: "Горчиво",
+  // finish
+  short: "Кратък", long: "Дълъг", warm: "Топъл",
+  // color
+  clear: "Бистра", golden: "Златиста", amber: "Кехлибарена", cloudy: "Мътна", dark: "Тъмна",
+};
+
 export default async function RakijaPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
   let rakija;
@@ -19,6 +34,33 @@ export default async function RakijaPage({ params }: { params: { id: string } })
   } catch {
     notFound();
   }
+
+  // Fetch current user's rating for this rakija (if logged in)
+  const { data: { user } } = await supabase.auth.getUser();
+  let myRating: {
+    id: string; score: number;
+    aroma_tags: string[] | null; taste_tags: string[] | null;
+    finish_tags: string[] | null; color_tags: string[] | null;
+    aroma_note: string | null; taste_note: string | null;
+    finish_note: string | null; venue_name: string | null; notes: string | null;
+  } | null = null;
+
+  if (user) {
+    const { data } = await supabase
+      .from("ratings")
+      .select("id, score, aroma_tags, taste_tags, finish_tags, color_tags, aroma_note, taste_note, finish_note, venue_name, notes")
+      .eq("rakija_id", params.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    myRating = data;
+  }
+
+  const allMyTags = [
+    ...(myRating?.aroma_tags ?? []),
+    ...(myRating?.taste_tags ?? []),
+    ...(myRating?.finish_tags ?? []),
+    ...(myRating?.color_tags ?? []),
+  ];
 
   return (
     <div className="px-4 pt-4 pb-8">
@@ -32,7 +74,7 @@ export default async function RakijaPage({ params }: { params: { id: string } })
         <FruitIcon fruit={rakija.fruit} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-oak">{rakija.name}</h1>
+            <h1 className="font-serif text-xl font-bold text-oak">{rakija.name}</h1>
             {rakija.is_verified && (
               <span className="rounded-full bg-verified/10 px-2 py-0.5 text-xs font-medium text-verified">
                 Верифицирана
@@ -75,7 +117,78 @@ export default async function RakijaPage({ params }: { params: { id: string } })
         />
       </div>
 
-      {/* Details */}
+      {/* My rating details */}
+      {myRating && (
+        <div className="mb-6 space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-accent">Моята оценка</h2>
+          <div className="card px-4 py-4 space-y-3">
+            {/* Score */}
+            <div className="flex items-center gap-3">
+              <div
+                className="flex flex-col items-center justify-center rounded-xl px-3 py-2"
+                style={{ background: "linear-gradient(145deg, #D4A574, #C8882A)", minWidth: "3rem" }}
+              >
+                <span className="text-lg font-bold text-white leading-none">{myRating.score}</span>
+                <span className="text-[9px] text-white/65 leading-none">/10</span>
+              </div>
+              {myRating.venue_name && (
+                <p className="text-xs text-muted flex items-center gap-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 shrink-0">
+                    <path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7z"/>
+                    <circle cx="12" cy="9" r="2.5"/>
+                  </svg>
+                  {myRating.venue_name}
+                </p>
+              )}
+            </div>
+
+            {/* Tags */}
+            {allMyTags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {allMyTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full px-2.5 py-1 text-xs font-medium text-walnut"
+                    style={{ background: "rgba(107,68,35,0.08)", border: "1px solid rgba(107,68,35,0.14)" }}
+                  >
+                    {TAG_LABELS[tag] ?? tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Per-section notes */}
+            {(myRating.aroma_note || myRating.taste_note || myRating.finish_note) && (
+              <div className="space-y-1.5 rounded-xl px-3 py-2.5" style={{ background: "rgba(107,68,35,0.05)", border: "1px solid rgba(107,68,35,0.09)" }}>
+                {myRating.aroma_note && (
+                  <p className="text-xs leading-relaxed text-walnut">
+                    <span className="font-semibold">Аромат: </span>{myRating.aroma_note}
+                  </p>
+                )}
+                {myRating.taste_note && (
+                  <p className="text-xs leading-relaxed text-walnut">
+                    <span className="font-semibold">Вкус: </span>{myRating.taste_note}
+                  </p>
+                )}
+                {myRating.finish_note && (
+                  <p className="text-xs leading-relaxed text-walnut">
+                    <span className="font-semibold">Финал: </span>{myRating.finish_note}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* General notes */}
+            {myRating.notes && (
+              <p className="text-sm italic leading-relaxed text-muted">
+                &ldquo;{myRating.notes}&rdquo;
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Rakija details */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-accent">Детайли</h2>
         <div className="card divide-y divide-accent/10">

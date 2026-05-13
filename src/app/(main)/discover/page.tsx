@@ -177,7 +177,16 @@ export default function DiscoverPage() {
           <div className="mt-12 flex flex-col items-center gap-2 text-center">
             <span className="text-4xl">🥃</span>
             <p className="font-medium text-oak">Няма намерени напитки</p>
-            <p className="text-sm text-walnut">Опитай с различно търсене</p>
+            <p className="text-sm text-muted">Опитай с различно търсене</p>
+            {query.trim() && (
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent("open-rating-sheet", { detail: { query } }))}
+                className="mt-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-cream"
+                style={{ background: "linear-gradient(135deg,#6B4423,#2C1810)" }}
+              >
+                + Добави личен запис
+              </button>
+            )}
           </div>
         ) : (
           <>
