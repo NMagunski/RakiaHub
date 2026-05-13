@@ -97,17 +97,16 @@ export default function BottomNav() {
               key={tab.href}
               href={tab.href}
               className="relative flex flex-col items-center gap-0.5 min-w-[64px] py-1.5 px-3 rounded-2xl transition-all duration-200"
-              style={active ? {
-                background: "rgba(107,68,35,0.12)",
-              } : {}}
+              style={{ background: active ? "rgba(107,68,35,0.12)" : "transparent" }}
             >
-              {/* Active indicator dot */}
-              {active && (
-                <span
-                  className="absolute top-1.5 h-1 w-5 rounded-full"
-                  style={{ background: "linear-gradient(90deg, #6B4423, #2C1810)" }}
-                />
-              )}
+              {/* Active indicator — always in DOM, opacity driven */}
+              <span
+                className="absolute top-1.5 h-1 w-5 rounded-full transition-opacity duration-200"
+                style={{
+                  background: "linear-gradient(90deg, #6B4423, #2C1810)",
+                  opacity: active ? 1 : 0,
+                }}
+              />
 
               <span className={`mt-2 transition-colors duration-200 ${active ? "text-walnut" : "text-muted"}`}>
                 {tab.icon(active)}
