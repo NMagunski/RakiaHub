@@ -137,10 +137,13 @@ export default function ProfilePage() {
   async function handleEmailUpdate(e: React.FormEvent) {
     e.preventDefault();
     setEmailSaving(true);
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    const { error } = await supabase.auth.updateUser(
+      { email: newEmail },
+      { emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile` },
+    );
     setEmailSaving(false);
     if (error) { showToast(error.message, "error"); return; }
-    showToast("Провери новия имейл за потвърждение");
+    showToast("Изпратихме линк за потвърждение на новия имейл. Кликни го и ще влезеш автоматично.");
     setNewEmail("");
   }
 
