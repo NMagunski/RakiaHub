@@ -137,14 +137,21 @@ export default function ProfilePage() {
   async function handleEmailUpdate(e: React.FormEvent) {
     e.preventDefault();
     setEmailSaving(true);
-    const { error } = await supabase.auth.updateUser(
-      { email: newEmail },
-      { emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile` },
-    );
+    const res = await fetch("/api/account", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: newEmail }),
+    });
     setEmailSaving(false);
-    if (error) { showToast(error.message, "error"); return; }
-    showToast("Изпратихме линк за потвърждение на новия имейл. Кликни го и ще влезеш автоматично.");
+    if (!res.ok) {
+      const { error } = await res.json();
+      showToast(error ?? "Грешка при смяна на имейл", "error");
+      return;
+    }
+    showToast("Имейлът е сменен. Влез отново с новия си имейл.");
     setNewEmail("");
+    await supabase.auth.signOut();
+    router.push("/login");
   }
 
   async function handleDeleteAccount() {
