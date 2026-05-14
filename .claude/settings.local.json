@@ -5,7 +5,13 @@
       "Bash(npx next *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill -9)",
+      "Bash(npm run *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

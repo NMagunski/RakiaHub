@@ -8,14 +8,18 @@ export default function AdminUsersPage() {
   const supabase = createClient();
   const [users, setUsers] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
-    const { data } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setUsers((data as Profile[]) ?? []);
+    const [{ data: userData }, { data: profilesData }] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+    ]);
+    setCurrentUserId(userData.user?.id ?? null);
+    setUsers((profilesData as Profile[]) ?? []);
     setLoading(false);
   }
 
@@ -28,6 +32,18 @@ export default function AdminUsersPage() {
       .update({ is_admin: !user.is_admin })
       .eq("id", user.id);
     load();
+  }
+
+  async function deleteUser(userId: string) {
+    setDeletingId(userId);
+    const res = await fetch("/api/admin/users", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }),
+    });
+    setDeletingId(null);
+    setConfirmDeleteId(null);
+    if (res.ok) load();
   }
 
   return (
@@ -69,12 +85,42 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => toggleAdmin(u)}
-                      className="text-sm text-walnut underline"
-                    >
-                      {u.is_admin ? "Премахни admin" : "Направи admin"}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => toggleAdmin(u)}
+                        className="text-sm text-walnut underline underline-offset-2"
+                      >
+                        {u.is_admin ? "Премахни admin" : "Направи admin"}
+                      </button>
+
+                      {u.id !== currentUserId && (
+                        confirmDeleteId === u.id ? (
+                          <span className="flex items-center gap-2 text-sm text-red-700">
+                            Изтрий?
+                            <button
+                              onClick={() => deleteUser(u.id)}
+                              disabled={deletingId === u.id}
+                              className="font-bold underline underline-offset-2 disabled:opacity-50"
+                            >
+                              {deletingId === u.id ? "…" : "Да"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="font-bold underline underline-offset-2"
+                            >
+                              Не
+                            </button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(u.id)}
+                            className="text-sm font-medium text-red-600 underline underline-offset-2"
+                          >
+                            Изтрий
+                          </button>
+                        )
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

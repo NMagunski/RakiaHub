@@ -27,9 +27,13 @@ export default function ProfilePage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [tab, setTab] = useState<"history" | "settings">("history");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [newPw, setNewPw]         = useState("");
-  const [confirmPw, setConfirmPw] = useState("");
-  const [pwSaving, setPwSaving]   = useState(false);
+  const [newPw, setNewPw]             = useState("");
+  const [confirmPw, setConfirmPw]     = useState("");
+  const [pwSaving, setPwSaving]       = useState(false);
+  const [newEmail, setNewEmail]       = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting]       = useState(false);
   const { show: showToast } = useToast();
 
   useEffect(() => {
@@ -128,6 +132,25 @@ export default function ProfilePage() {
     if (error) { showToast(error.message, "error"); return; }
     showToast("Паролата е сменена ✓");
     setNewPw(""); setConfirmPw("");
+  }
+
+  async function handleEmailUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    setEmailSaving(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    setEmailSaving(false);
+    if (error) { showToast(error.message, "error"); return; }
+    showToast("Провери новия имейл за потвърждение");
+    setNewEmail("");
+  }
+
+  async function handleDeleteAccount() {
+    if (deleteConfirm !== "ИЗТРИЙ") return;
+    setDeleting(true);
+    const res = await fetch("/api/account", { method: "DELETE" });
+    if (!res.ok) { showToast("Грешка при изтриване на акаунта", "error"); setDeleting(false); return; }
+    await supabase.auth.signOut();
+    router.push("/login");
   }
 
   async function handleSignOut() {
@@ -383,6 +406,53 @@ export default function ProfilePage() {
               {pwSaving ? "Запазване…" : "Смени паролата"}
             </button>
           </form>
+
+          {/* Email update */}
+          <form onSubmit={handleEmailUpdate} className="flex flex-col gap-3 border-t border-accent/10 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-accent">Смяна на имейл</p>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="input"
+              placeholder="Нов имейл адрес"
+              autoComplete="email"
+              required
+            />
+            <button
+              type="submit"
+              disabled={emailSaving || !newEmail}
+              className="btn-primary"
+            >
+              {emailSaving ? "Изпращане…" : "Изпрати потвърждение"}
+            </button>
+            <p className="text-xs text-muted">Ще получиш имейл на новия адрес за потвърждение.</p>
+          </form>
+
+          {/* Danger zone */}
+          <div className="rounded-2xl border border-red-200 p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Изтриване на акаунт</p>
+            <p className="text-xs text-muted leading-relaxed">
+              Всички твои оценки, реакции и данни ще бъдат изтрити безвъзвратно.
+              Напиши <strong className="text-oak">ИЗТРИЙ</strong> за да потвърдиш.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              className="input text-sm"
+              placeholder="ИЗТРИЙ"
+              autoComplete="off"
+            />
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleteConfirm !== "ИЗТРИЙ" || deleting}
+              className="w-full rounded-2xl py-3 text-sm font-bold text-white disabled:opacity-40"
+              style={{ background: "#DC2626" }}
+            >
+              {deleting ? "Изтриване…" : "Изтрий акаунта завинаги"}
+            </button>
+          </div>
 
           <div className="border-t border-accent/10 pt-2 flex flex-col gap-2">
             {profile.is_admin && (
