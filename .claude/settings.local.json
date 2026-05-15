@@ -8,7 +8,9 @@
       "Bash(npx tsx *)",
       "Bash(lsof -ti:3000)",
       "Bash(xargs kill -9)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(ls /Users/nikolaymagunski/.claude/plans/)",
+      "Read(//Users/nikolaymagunski/.claude/plans/**)"
     ],
     "additionalDirectories": [
       "/tmp"

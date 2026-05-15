@@ -26,6 +26,15 @@ const TABS = [
     ),
   },
   {
+    href: "/wishlist",
+    label: "Списък",
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+      </svg>
+    ),
+  },
+  {
     href: "/friends",
     label: "Приятели",
     icon: (active: boolean) => (

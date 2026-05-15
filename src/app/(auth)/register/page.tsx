@@ -12,6 +12,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -53,6 +55,11 @@ export default function RegisterPage() {
         setLoading(false);
         return;
       }
+
+      await supabase
+        .from("profiles")
+        .update({ age_verified_at: new Date().toISOString() })
+        .eq("id", data.user.id);
 
       // If session exists (email confirmation disabled) — go directly to feed
       // If no session — user needs to confirm email first
@@ -143,13 +150,40 @@ export default function RegisterPage() {
             />
           </div>
 
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={ageConfirmed}
+              onChange={e => setAgeConfirmed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-walnut"
+            />
+            <span className="text-sm text-oak">
+              Потвърждавам, че съм навършил/а <strong>18 години</strong>.
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={e => setTermsAccepted(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-walnut"
+            />
+            <span className="text-sm text-oak">
+              Прочетох и приемам{" "}
+              <Link href="/terms" target="_blank" className="font-semibold text-walnut underline underline-offset-2">
+                Общите условия
+              </Link>.
+            </span>
+          </label>
+
           {error && (
             <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
           )}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !ageConfirmed || !termsAccepted}
             className="btn-primary mt-2"
           >
             {loading ? "Създаване…" : "Регистрирай се"}

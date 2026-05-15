@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import FruitIcon from "@/components/ui/FruitIcon";
 import BackButton from "@/components/rakija/BackButton";
 import RateButton from "@/components/rakija/RateButton";
+import WishlistButton from "@/components/rakija/WishlistButton";
 
 const FRUIT_BG: Record<string, string> = {
   plum: "Сливова", grape: "Гроздова", apricot: "Кайсиева",
@@ -53,6 +54,17 @@ export default async function RakijaPage({ params }: { params: { id: string } })
       .eq("user_id", user.id)
       .maybeSingle();
     myRating = data;
+  }
+
+  let isWishlisted = false;
+  if (user) {
+    const { data: wl } = await supabase
+      .from("wishlists")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("rakija_id", params.id)
+      .maybeSingle();
+    isWishlisted = !!wl;
   }
 
   const allMyTags = [
@@ -109,12 +121,17 @@ export default async function RakijaPage({ params }: { params: { id: string } })
       )}
 
       {/* Rate button */}
-      <div className="mb-6">
+      <div className="mb-3">
         <RateButton
           rakijaId={rakija.id}
           rakijaName={rakija.name}
           rakijaProducer={rakija.producer}
         />
+      </div>
+
+      {/* Wishlist button */}
+      <div className="mb-6">
+        <WishlistButton rakijaId={rakija.id} initialState={isWishlisted} />
       </div>
 
       {/* My rating details */}

@@ -120,6 +120,10 @@ export async function POST(req: NextRequest) {
     ratingId = inserted.id;
   }
 
+  // Auto-remove from wishlist — rakija is now rated, no longer "want to try"
+  await supabase.from("wishlists")
+    .delete().eq("user_id", user.id).eq("rakija_id", finalRakijaId);
+
   return NextResponse.json({ id: ratingId });
 }
 

@@ -17,6 +17,7 @@ export type Database = {
           avatar_url: string | null;
           is_admin: boolean;
           created_at: string;
+          age_verified_at: string | null;
         };
         Insert: {
           id: string;
@@ -25,12 +26,14 @@ export type Database = {
           avatar_url?: string | null;
           is_admin?: boolean;
           created_at?: string;
+          age_verified_at?: string | null;
         };
         Update: {
           username?: string;
           display_name?: string | null;
           avatar_url?: string | null;
           is_admin?: boolean;
+          age_verified_at?: string | null;
         };
         Relationships: [];
       };
@@ -191,6 +194,12 @@ export type Database = {
         Update: {
           type?: "nazdrave";
         };
+        Relationships: [];
+      };
+      wishlists: {
+        Row: { id: string; user_id: string; rakija_id: string; created_at: string };
+        Insert: { user_id: string; rakija_id: string; id?: string; created_at?: string };
+        Update: Record<string, never>;
         Relationships: [];
       };
       promotion_suggestions: {

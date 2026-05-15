@@ -5,14 +5,14 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 
 ---
 
-## Session Status (last updated: April 2026)
+## Session Status (last updated: May 2026)
 
 ### ✅ Completed features
 - Authentication (email + password, username, middleware)
 - Feed (pull-to-refresh, reactions, delete with confirm, auto-refresh on new rating)
 - Discover (text search + **fruit chips, sort, verified filter** — M2 done)
 - Rakija detail page (Server Component)
-- Rating flow (FAB → bottom sheet → score → optional details form)
+- Rating flow (FAB → bottom sheet → score → inline details step — single POST)
 - Profile (stats, rating history with delete confirm, settings, avatar upload)
 - **Публичен профил `/u/[username]`** — Server Component, public ratings, stats (M3 done)
 - **Значки (Badges)** — computed client-side in `src/lib/badges.ts`, shown on profile + public profile (M4 done)
@@ -22,6 +22,12 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 - PWA (manifest, service worker, offline page)
 - Toast notifications
 - **UI/UX редизайн "Modern Craft"** — бели карти, Playfair Display serif, SVG fruit icons, нов score badge, NazdraveButton с pop анимация, нов AppHeader, BottomNav pill indicator, Login hero екран
+- **Password reset** — client-side PKCE exchange on `/auth/reset-password` (link goes straight there, no server relay)
+- **Email update** — via admin API (`PATCH /api/account`), bypasses OTP/redirect flow, signs user out after change
+- **Account deletion** — self-delete (`DELETE /api/account`) + admin-delete (`DELETE /api/admin/users`); cascade: reactions → ratings → friendships → personal_entries → invite_links → nullify rakija.added_by → nullify promotion_suggestions.reviewed_by → profile → auth user
+- **18+ age verification** — checkbox at registration, `age_verified_at` timestamp written to profiles table on signup
+- **Terms & Conditions** — static page at `/terms` (public, no auth), accepted via checkbox at registration, linked from Settings tab
+- **Production deployment** — live at `https://rakia-hub.vercel.app` on Vercel
 
 ### 🔴 Pending — next session pick-up point
 
@@ -81,8 +87,12 @@ CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.la
 ### Authentication
 - Email + password login/register via Supabase Auth
 - Username required on register (lowercase, alphanumeric + `_`, min 3 chars)
-- Middleware protects all routes except `/login`, `/register`, `/invite/*`, `/u/*`
+- Register requires two checkboxes: 18+ confirmation + T&C acceptance; `age_verified_at` written to profiles on signup
+- Middleware: `PUBLIC_PATHS` = unauthenticated only (`/login`, `/register`, `/invite`, `/u`); `ALWAYS_PATHS` = everyone (`/auth/reset-password`, `/auth/callback`, `/terms`)
 - Session managed via `@supabase/ssr` cookies
+- **Password reset**: `resetPasswordForEmail({ redirectTo: window.location.origin + '/auth/reset-password' })` → client-side `exchangeCodeForSession(code)` on landing page. Redirect URL must be in Supabase allowed list.
+- **Email update**: `PATCH /api/account` uses `admin.auth.admin.updateUserById` — bypasses OTP entirely, signs user out immediately after so they re-login with new email. Do NOT use `supabase.auth.updateUser({ email })` on the client — causes PKCE verifier mismatch in email clients.
+- **Account self-deletion**: `DELETE /api/account` — authenticated user only, cascades all data then deletes auth record via admin client
 
 ### Feed (`/feed`)
 - Shows latest 50 public ratings (all users — not filtered to friends, intentional for now)
@@ -121,11 +131,16 @@ CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.la
 ### Profile (`/profile`)
 - Stats row: total ratings, unique napitki, average score
 - **Значки**: badges computed from rating history, rendered as pills with emoji — appears only when at least one badge is earned
-- **Public profile link**: `rakiq.app/u/<username>` — links to `/u/[username]`
+- **Public profile link**: `rakia-hub.vercel.app/u/<username>` — links to `/u/[username]`
 - **История** tab: list of own ratings, delete with inline confirm, links to rakija detail
-- **Настройки** tab: display name, username (uniqueness checked client-side), avatar upload to Supabase Storage `avatars` bucket
-- Sign out
-- Admin panel link (visible only if `is_admin = true`)
+- **Настройки** tab:
+  - Display name, username (uniqueness checked client-side), avatar upload to Supabase Storage `avatars` bucket
+  - Password change (`supabase.auth.updateUser({ password })`)
+  - Email change (`PATCH /api/account` → admin API → signs out user)
+  - **Danger zone**: type "ИЗТРИЙ" → `DELETE /api/account` → signs out → redirects to `/login`
+  - Link to Общи условия (`/terms`)
+  - Admin panel link (visible only if `is_admin = true`)
+  - Sign out
 
 ### Public Profile (`/u/[username]`)
 - Server Component, accessible without login (public route)
@@ -160,8 +175,13 @@ CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.la
 ### Admin Panel (`/admin/*`)
 - Protected by `is_admin` profile flag (checked in middleware)
 - **Ракии** (`/admin/rakija`): table of commercial rakiyas, search, add/edit/delete, verified toggle
-- **Потребители** (`/admin/users`): user list, toggle admin role
+- **Потребители** (`/admin/users`): user list, toggle admin role, delete user (inline confirm; admin cannot delete own account; uses `DELETE /api/admin/users` → cascade)
 - **Промоции** (`/admin/promotions`): personal rakiyas suggested for commercial promotion; filter by status; approve (sets `type=commercial`, `is_verified=true`) or reject
+
+### Terms & Conditions (`/terms`)
+- Static Server Component, no auth required (`ALWAYS_PATHS`)
+- Bulgarian placeholder text — 7 sections: въведение, достъп/възраст, потребителско съдържание, отговорност, акаунти, промени, контакт
+- Linked from registration form (opens in new tab) and profile Settings tab
 
 ### PWA
 - `manifest.json`: name "RakiaHub", start `/feed`, standalone display, theme `#7A5230`
@@ -179,7 +199,7 @@ CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.la
 
 | Table | Key Fields |
 |---|---|
-| `profiles` | `id`, `username`, `display_name`, `avatar_url`, `is_admin`, `created_at` |
+| `profiles` | `id`, `username`, `display_name`, `avatar_url`, `is_admin`, `created_at`, `age_verified_at` |
 | `rakija` | `id`, `name`, `producer`, `fruit`, `type` (commercial/personal/homemade), `region`, `country`, `abv`, `vintage_year`, `description`, `is_verified`, `global_rating`, `rating_count`, `added_by` |
 | `ratings` | `id`, `user_id`, `rakija_id`, `score`, `aroma/taste/finish/color_tags`, `*_note`, `venue_name`, `venue_place_id`, `notes`, `is_private`, `created_at` |
 | `friendships` | `id`, `requester_id`, `addressee_id`, `status` (pending/accepted/declined) |
@@ -199,6 +219,9 @@ Rating tags — Aroma (9), Taste (8), Finish (7), Color (5)
 |---|---|---|
 | POST | `/api/ratings` | Create/update rating; upsert logic: finds existing `(user_id, rakija_id)` → UPDATE, else INSERT |
 | DELETE | `/api/ratings` | Delete own rating (checks `user_id` ownership) |
+| PATCH | `/api/account` | Update own email via admin client (bypasses OTP); signs user out client-side after |
+| DELETE | `/api/account` | Cascade-delete own account + auth record |
+| DELETE | `/api/admin/users` | Admin: cascade-delete any user (guards: must be admin, cannot self-delete) |
 | POST | `/api/friends` | Actions: `send / accept / decline / remove` |
 | POST | `/api/invite` | Generate invite token (7-day expiry) |
 | GET | `/api/invite` | Validate token |
@@ -218,6 +241,10 @@ Rating tags — Aroma (9), Taste (8), Finish (7), Color (5)
 - **filtersRef pattern**: when a `load()` function needs filter state but can't list them as deps (stale closure), keep a ref synced to current values and read from the ref inside `load()`
 - **Hooks before early returns**: all `useState`, `useEffect`, `useMemo` etc. must be called before any conditional `return` — violation causes "Rendered more hooks than during the previous render"
 - Word choice: "напитка / напитки" (not "ракия / ракии") in user-facing UI strings
+- **Admin client** (`src/lib/supabase/admin.ts`): service-role client, server-side only, used for cascade deletes and email updates. Never expose `SUPABASE_SERVICE_ROLE_KEY` to the client.
+- **Cascade deletion** (`src/lib/deleteUser.ts`): shared helper used by both self-delete and admin-delete routes. Order matters — delete dependent rows before parents (reactions → ratings → friendships → personal_entries → invite_links → nullify FKs → profile → auth user).
+- **PKCE gotcha**: Supabase email flows (password reset, email change confirmations) use a PKCE verifier stored in localStorage. If the email is opened in a different browser/app, the verifier is missing → "otp_expired". Fix: use admin API for email changes; for password reset, redirect straight to the reset page so exchange happens client-side in the same browser.
+- **Supabase URL config**: Site URL = `https://rakia-hub.vercel.app`; Redirect URLs = `https://rakia-hub.vercel.app/**` + `http://localhost:3001/**`
 
 ---
 
@@ -242,12 +269,17 @@ src/
 │   │   └── promotions/       # Promotion queue
 │   ├── api/
 │   │   ├── ratings/route.ts  # POST (upsert) + DELETE
+│   │   ├── account/route.ts  # PATCH (email update) + DELETE (self-delete)
+│   │   ├── admin/users/route.ts # DELETE (admin user delete)
 │   │   ├── friends/route.ts  # Friend actions
 │   │   ├── invite/route.ts   # Invite tokens
 │   │   └── promotions/route.ts # Admin approve/reject
 │   ├── invite/[token]/       # Invite acceptance page
 │   ├── rakija/[id]/          # Rakija detail (Server Component)
 │   ├── rate/[id]/details/    # Rating details form
+│   ├── terms/page.tsx        # T&C static page (public, no auth)
+│   ├── auth/reset-password/  # Password reset (client-side PKCE exchange)
+│   ├── auth/callback/        # Auth callback route handler
 │   └── offline/              # PWA offline fallback
 ├── components/
 │   ├── layout/               # AppHeader, BottomNav, RatingFAB
@@ -258,8 +290,9 @@ src/
 │   └── ui/                   # FruitIcon
 ├── lib/
 │   ├── queries/              # feed.ts, rakija.ts, friends.ts
-│   ├── supabase/             # client.ts, server.ts
+│   ├── supabase/             # client.ts, server.ts, admin.ts (service-role)
 │   ├── badges.ts             # Badge definitions + computeBadges()
+│   ├── deleteUser.ts         # Cascade deletion helper (shared by account + admin routes)
 │   └── promotionCheck.ts
 ├── context/
 │   └── ToastContext.tsx

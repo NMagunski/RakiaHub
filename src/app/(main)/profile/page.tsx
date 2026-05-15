@@ -14,6 +14,13 @@ type RatingWithRakija = Rating & {
   rakija: Pick<Rakija, "id" | "name" | "producer" | "fruit"> | null;
 };
 
+type WishlistItem = {
+  id: string;
+  rakija_id: string;
+  created_at: string;
+  rakija: Pick<Rakija, "id" | "name" | "producer" | "fruit"> | null;
+};
+
 export default function ProfilePage() {
   const router = useRouter();
   const supabase = createClient();
@@ -25,7 +32,8 @@ export default function ProfilePage() {
   const [newUsername, setNewUsername] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [tab, setTab] = useState<"history" | "settings">("history");
+  const [tab, setTab] = useState<"history" | "wishlist" | "settings">("history");
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [newPw, setNewPw]             = useState("");
   const [confirmPw, setConfirmPw]     = useState("");
@@ -41,7 +49,7 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [profileRes, ratingsRes] = await Promise.all([
+      const [profileRes, ratingsRes, wishlistRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase
           .from("ratings")
@@ -49,6 +57,11 @@ export default function ProfilePage() {
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(50),
+        supabase
+          .from("wishlists")
+          .select("id, rakija_id, created_at, rakija:rakija_id(id, name, producer, fruit)")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (profileRes.data) {
@@ -57,6 +70,7 @@ export default function ProfilePage() {
         setNewUsername(profileRes.data.username);
       }
       setRatings((ratingsRes.data as RatingWithRakija[]) ?? []);
+      setWishlist((wishlistRes.data as WishlistItem[]) ?? []);
     }
     load();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -277,7 +291,7 @@ export default function ProfilePage() {
 
       {/* Tabs */}
       <div className="flex border-b border-accent/20 px-4">
-        {(["history", "settings"] as const).map((t) => (
+        {(["history", "wishlist", "settings"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -285,7 +299,7 @@ export default function ProfilePage() {
               tab === t ? "border-walnut text-walnut" : "border-transparent text-accent"
             }`}
           >
-            {t === "history" ? "История" : "Настройки"}
+            {t === "history" ? "История" : t === "wishlist" ? "Списък" : "Настройки"}
           </button>
         ))}
       </div>
@@ -346,6 +360,38 @@ export default function ProfilePage() {
                   </button>
                 )}
               </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Wishlist tab */}
+      {tab === "wishlist" && (
+        <div className="flex flex-col gap-2 px-4 py-4">
+          {wishlist.length === 0 ? (
+            <div className="mt-16 flex flex-col items-center gap-3 text-center">
+              <span className="text-5xl">🔖</span>
+              <p className="font-semibold text-oak">Списъкът е празен</p>
+              <p className="text-sm text-walnut">Запази ракии, които искаш да пробваш.</p>
+            </div>
+          ) : (
+            wishlist.map((item) => (
+              <Link
+                key={item.id}
+                href={`/rakija/${item.rakija_id}`}
+                className="card flex items-center gap-3 px-4 py-3"
+              >
+                <FruitIcon fruit={item.rakija?.fruit ?? null} size="sm" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-oak text-sm">{item.rakija?.name}</p>
+                  {item.rakija?.producer && (
+                    <p className="truncate text-xs text-walnut mt-0.5">{item.rakija.producer}</p>
+                  )}
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0 text-accent/40">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </Link>
             ))
           )}
         </div>
@@ -462,6 +508,12 @@ export default function ProfilePage() {
             >
               {deleting ? "Изтриване…" : "Изтрий акаунта завинаги"}
             </button>
+          </div>
+
+          <div className="pt-1 text-center">
+            <Link href="/terms" className="text-xs text-accent underline underline-offset-2">
+              Общи условия
+            </Link>
           </div>
 
           <div className="border-t border-accent/10 pt-2 flex flex-col gap-2">

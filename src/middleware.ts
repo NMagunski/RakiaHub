@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register", "/invite", "/u"];
-const ALWAYS_PATHS = ["/auth/reset-password", "/auth/callback"]; // accessible regardless of auth state
+const ALWAYS_PATHS = ["/auth/reset-password", "/auth/callback", "/terms"]; // accessible regardless of auth state
 const ADMIN_PATHS = ["/admin"];
 
 export async function middleware(request: NextRequest) {

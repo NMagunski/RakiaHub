@@ -7,6 +7,7 @@ export type Friendship = Database["public"]["Tables"]["friendships"]["Row"];
 export type Reaction = Database["public"]["Tables"]["reactions"]["Row"];
 export type PromotionSuggestion =
   Database["public"]["Tables"]["promotion_suggestions"]["Row"];
+export type Wishlist = Database["public"]["Tables"]["wishlists"]["Row"];
 
 export type RakijaType = Rakija["type"];
 export type FriendshipStatus = Friendship["status"];
