@@ -1,0 +1,10 @@
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const handlers={};let promise;
+vm.runInNewContext(readFileSync('public/sw.js','utf8'),{self:{location:{origin:'https://app.test'},addEventListener:(name,handler)=>handlers[name]=handler},URL,fetch:()=>Promise.reject(new Error('offline')),caches:{match:async()=>({offline:true})}});
+handlers.fetch({request:{method:'GET',url:'https://app.test/api/passport',mode:'cors'},respondWith:()=>assert.fail('API received a fallback')});
+handlers.fetch({request:{method:'GET',url:'https://app.test/feed?_rsc=1',mode:'cors'},respondWith:()=>assert.fail('RSC received HTML')});
+handlers.fetch({request:{method:'GET',url:'https://app.test/feed',mode:'navigate'},respondWith:p=>promise=p});
+assert.equal((await promise).offline,true);
+console.log('PASS: offline HTML only for navigation, API and RSC bypassed');

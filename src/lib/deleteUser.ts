@@ -4,6 +4,14 @@ export async function deleteUserData(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
 ) {
+  // New journal images are private and must not outlive the account.
+  for (;;) {
+    const {data:files,error}=await admin.storage.from("tasting-photos").list(userId,{limit:100});
+    if(error)throw new Error("Could not remove private tasting photos");
+    if(!files?.length)break;
+    const {error:removeError}=await admin.storage.from("tasting-photos").remove(files.map(file=>`${userId}/${file.name}`));
+    if(removeError)throw new Error("Could not remove private tasting photos");
+  }
   // 1. Reactions ON the user's ratings (other users' reactions to their content)
   const { data: ratingRows } = await admin
     .from("ratings")

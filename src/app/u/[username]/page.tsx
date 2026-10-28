@@ -9,21 +9,13 @@ import type { RatingForBadges } from "@/lib/badges";
 export default async function PublicProfilePage({ params }: { params: { username: string } }) {
   const supabase = createClient();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url, created_at")
-    .eq("username", params.username)
-    .single();
-
-  if (!profile) notFound();
-
-  const { data: ratings } = await supabase
-    .from("ratings")
-    .select("id, score, notes, created_at, rakija:rakija_id(id, name, producer, fruit)")
-    .eq("user_id", profile.id)
-    .eq("is_private", false)
-    .order("created_at", { ascending: false })
-    .limit(50);
+  // Guest contract exposes only explicit profile fields and 50 public commercial tastings.
+  const { data, error } = await supabase.rpc("public_profile", { p_username: params.username });
+  if (error) throw new Error("Публичният профил временно не е достъпен.");
+  if (!data) notFound();
+  const result = data as { profile: { username: string; display_name: string | null; avatar_url: string | null; created_at: string }; ratings: { id: string; score: number; created_at: string; rakija_id: string; name: string; producer: string | null; fruit: string | null }[] };
+  const profile = result.profile;
+  const ratings = result.ratings.map(r => ({ ...r, notes: null, rakija: { id:r.rakija_id,name:r.name,producer:r.producer,fruit:r.fruit } }));
 
   const ratingList = (ratings ?? []) as RatingForBadges[];
   const badges = computeBadges(ratingList);
@@ -64,7 +56,7 @@ export default async function PublicProfilePage({ params }: { params: { username
           {profile.display_name && (
             <p className="text-sm text-accent mt-0.5">@{profile.username}</p>
           )}
-          <p className="text-xs text-accent/60 mt-1">
+          <p className="text-xs text-muted mt-1">
             Член от {new Date(profile.created_at).toLocaleDateString("bg-BG", { month: "long", year: "numeric" })}
           </p>
         </div>
@@ -96,7 +88,7 @@ export default async function PublicProfilePage({ params }: { params: { username
                 key={b.id}
                 title={b.description}
                 className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
-                style={{ background: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.60)", color: "#7A5230" }}
+                style={{ background: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.60)", color: "rgb(var(--walnut))" }}
               >
                 <span>{b.emoji}</span>
                 <span>{b.name}</span>
@@ -109,7 +101,7 @@ export default async function PublicProfilePage({ params }: { params: { username
       {/* Recent ratings */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent">
-          Последни оценки
+          Последни публични оценки (до 50)
         </p>
         {ratingList.length === 0 ? (
           <div className="card px-4 py-6 text-center">
@@ -131,7 +123,7 @@ export default async function PublicProfilePage({ params }: { params: { username
                     {rakija?.producer && (
                       <p className="truncate text-xs text-walnut mt-0.5">{rakija.producer}</p>
                     )}
-                    <p className="text-xs text-accent/60 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {new Date(r.created_at).toLocaleDateString("bg-BG", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import NazdraveButton from "./NazdraveButton";
 import FruitIcon from "@/components/ui/FruitIcon";
+import ShareButton from "@/components/ui/ShareButton";
 
 import type { Reactor } from "@/lib/queries/feed";
 
@@ -35,10 +36,10 @@ function ScoreBadge({ score }: { score: number }) {
   const isAmber  = score >= 7.0 && score < 9.0;
 
   const bg = isGold
-    ? "linear-gradient(145deg, #D4A574 0%, #C8882A 100%)"
+    ? "linear-gradient(145deg, #D4A574 0%, rgb(var(--gold)) 100%)"
     : isAmber
-    ? "linear-gradient(145deg, #C8956D 0%, #A0724A 100%)"
-    : "linear-gradient(145deg, #8A7968 0%, #6B6459 100%)";
+    ? "linear-gradient(145deg, rgb(var(--accent)) 0%, #A0724A 100%)"
+    : "linear-gradient(145deg, rgb(var(--muted)) 0%, #6B6459 100%)";
 
   const shadow = isGold
     ? "0 2px 14px rgba(200,136,42,0.45), 0 1px 0 rgba(255,255,255,0.18) inset"
@@ -88,7 +89,7 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
           <Link href={`/u/${profiles?.username}`} className="text-sm font-semibold text-walnut hover:underline">
             @{profiles?.username}
           </Link>
-          <span className="text-sm" style={{ color: "#8A7968" }}> оцени</span>
+          <span className="text-sm" style={{ color: "rgb(var(--muted))" }}> оцени</span>
         </div>
         <span className="text-xs" style={{ color: "rgba(138,121,104,0.7)" }}>{dateStr}</span>
       </div>
@@ -101,7 +102,7 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
             {rakija?.name}
           </p>
           {rakija?.producer && (
-            <p className="truncate text-xs mt-0.5 font-medium" style={{ color: "#8A7968" }}>{rakija.producer}</p>
+            <p className="truncate text-xs mt-0.5 font-medium" style={{ color: "rgb(var(--muted))" }}>{rakija.producer}</p>
           )}
           {rating.venue_name && (
             <p className="truncate text-xs mt-0.5 flex items-center gap-1" style={{ color: "rgba(138,121,104,0.80)" }}>
@@ -133,7 +134,7 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
 
       {/* General note */}
       {rating.notes && (
-        <p className="px-4 pb-3.5 text-sm italic leading-relaxed line-clamp-2" style={{ color: "#8A7968" }}>
+        <p className="px-4 pb-3.5 text-sm italic leading-relaxed line-clamp-2" style={{ color: "rgb(var(--muted))" }}>
           &ldquo;{rating.notes}&rdquo;
         </p>
       )}
@@ -142,17 +143,17 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
       {(rating.aroma_note || rating.taste_note || rating.finish_note) && (
         <div className="mx-4 mb-3.5 space-y-1 rounded-xl px-3 py-2.5" style={{ background: "rgba(107,68,35,0.05)", border: "1px solid rgba(107,68,35,0.09)" }}>
           {rating.aroma_note && (
-            <p className="text-xs leading-relaxed" style={{ color: "#6B4423" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "rgb(var(--walnut))" }}>
               <span className="font-semibold">Аромат: </span>{rating.aroma_note}
             </p>
           )}
           {rating.taste_note && (
-            <p className="text-xs leading-relaxed" style={{ color: "#6B4423" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "rgb(var(--walnut))" }}>
               <span className="font-semibold">Вкус: </span>{rating.taste_note}
             </p>
           )}
           {rating.finish_note && (
-            <p className="text-xs leading-relaxed" style={{ color: "#6B4423" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "rgb(var(--walnut))" }}>
               <span className="font-semibold">Финал: </span>{rating.finish_note}
             </p>
           )}
@@ -170,6 +171,14 @@ export default function RatingCard({ rating, reactions, currentUserId, onDelete 
           initialReacted={reactions.user_reacted}
           userId={currentUserId}
           reactors={reactions.reactors}
+        />
+
+        <ShareButton
+          title={`${rakija?.name} — ${rating.score}/10`}
+          text={rating.notes ? `„${rating.notes}"` : undefined}
+          url={`https://rakia-hub.vercel.app/rakija/${rakija?.id}`}
+          className="ml-3 flex items-center justify-center rounded-lg p-1.5 transition-colors"
+          style={{ color: "rgba(138,121,104,0.55)" } as React.CSSProperties}
         />
 
         {onDelete && rating.profiles?.id === currentUserId && (

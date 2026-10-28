@@ -9,6 +9,7 @@ const PULL_THRESHOLD = 72;
 
 export default function FeedPage() {
   const supabase = createClient();
+  const [error, setError] = useState("");
   const [items, setItems] = useState<FeedRating[]>([]);
   const [reactionMap, setReactionMap] = useState<Record<string, { count: number; user_reacted: boolean; reactors: Reactor[] }>>({});
   const [userId, setUserId] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export default function FeedPage() {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
+    setError("");
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setUserId(user.id);
@@ -40,8 +42,8 @@ export default function FeedPage() {
       const reactions = await getReactionCounts(supabase, feed.map((i) => i.id));
       setItems(feed);
       setReactionMap(reactions);
-    } catch (e) {
-      console.error("Feed error:", e);
+    } catch {
+      setError("Потокът не беше зареден. Опитай отново.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -95,6 +97,7 @@ export default function FeedPage() {
 
   return (
     <div ref={containerRef} className="flex flex-col">
+      {error && <div className="card m-4 p-4" role="alert">{error} <button className="underline" onClick={()=>load()}>Повтори</button></div>}
       {/* Pull-to-refresh indicator */}
       <div
         className="flex items-center justify-center overflow-hidden transition-all duration-200"
@@ -157,7 +160,7 @@ function EmptyFeed() {
   return (
     <div className="mt-16 flex flex-col items-center gap-3 text-center px-6">
       <span className="text-5xl">🥃</span>
-      <p className="text-lg font-semibold text-oak">Добре дошъл в RakiaHub!</p>
+      <p className="text-lg font-semibold text-oak">Добре дошъл в RAKIQ!</p>
       <p className="text-sm text-walnut">
         Натисни бутилката долу вдясно и оцени първата си напитка.
       </p>

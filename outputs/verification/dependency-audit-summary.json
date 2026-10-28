@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-28",
+  "counts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 2,
+    "high": 10,
+    "critical": 1,
+    "total": 13
+  },
+  "direct": {
+    "eslint-config-next": {
+      "severity": "high",
+      "fixAvailable": {
+        "name": "eslint-config-next",
+        "version": "16.4.3",
+        "isSemVerMajor": true
+      }
+    },
+    "next": {
+      "severity": "critical",
+      "fixAvailable": {
+        "name": "next",
+        "version": "16.4.3",
+        "isSemVerMajor": true
+      }
+    },
+    "postcss": {
+      "severity": "high",
+      "fixAvailable": {
+        "name": "next",
+        "version": "16.4.3",
+        "isSemVerMajor": true
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@ export type Badge = {
   description: string;
 };
 
-const BADGE_DEFS: Array<Badge & { check: (ratings: Rating[]) => boolean }> = [
+const BADGE_DEFS: Array<Badge & { check: (ratings: Pick<Rating, "id" | "score" | "notes" | "created_at">[]) => boolean }> = [
   {
     id: "novak",
     emoji: "🥃",
@@ -62,7 +62,7 @@ const BADGE_DEFS: Array<Badge & { check: (ratings: Rating[]) => boolean }> = [
   },
 ];
 
-export type RatingForBadges = Rating & {
+export type RatingForBadges = Pick<Rating, "id" | "score" | "notes" | "created_at"> & {
   rakija?: { fruit?: string | null } | null;
 };
 

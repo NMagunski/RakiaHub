@@ -57,14 +57,14 @@ function BottleIcon() {
     <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden>
       <path
         d="M9 3h6M10 3v2.5c0 .5-.5 1-1 1.5L7 9v11a1 1 0 001 1h8a1 1 0 001-1V9l-2-2c-.5-.5-1-1-1-1.5V3"
-        stroke="#EDD9C0"
+        stroke="rgb(var(--cream))"
         strokeWidth="1.6"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M7 14h10"
-        stroke="#EDD9C0"
+        stroke="rgb(var(--cream))"
         strokeWidth="1.6"
         strokeLinecap="round"
       />

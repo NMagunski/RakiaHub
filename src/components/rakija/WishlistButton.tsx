@@ -37,8 +37,8 @@ export default function WishlistButton({
       className="flex w-full items-center justify-center gap-2 rounded-2xl border py-3 text-sm font-medium transition-colors disabled:opacity-50"
       style={
         wishlisted
-          ? { borderColor: "rgba(107,68,35,0.5)", background: "rgba(107,68,35,0.07)", color: "#6B4423" }
-          : { borderColor: "rgba(107,68,35,0.25)", background: "transparent", color: "#6B4423" }
+          ? { borderColor: "rgba(107,68,35,0.5)", background: "rgba(107,68,35,0.07)", color: "rgb(var(--walnut))" }
+          : { borderColor: "rgba(107,68,35,0.25)", background: "transparent", color: "rgb(var(--walnut))" }
       }
     >
       <svg

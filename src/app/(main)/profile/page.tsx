@@ -1,4 +1,5 @@
 "use client";
+import ThemePicker from "@/components/theme/ThemePicker";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
@@ -26,6 +27,7 @@ export default function ProfilePage() {
   const supabase = createClient();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [loadError, setLoadError] = useState("");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [ratings, setRatings] = useState<RatingWithRakija[]>([]);
   const [displayName, setDisplayName] = useState("");
@@ -64,6 +66,7 @@ export default function ProfilePage() {
           .order("created_at", { ascending: false }),
       ]);
 
+      if (profileRes.error || ratingsRes.error || wishlistRes.error) { setLoadError("Профилът не беше зареден изцяло. Опитай отново."); }
       if (profileRes.data) {
         setProfile(profileRes.data);
         setDisplayName(profileRes.data.display_name ?? "");
@@ -72,7 +75,7 @@ export default function ProfilePage() {
       setRatings((ratingsRes.data as RatingWithRakija[]) ?? []);
       setWishlist((wishlistRes.data as WishlistItem[]) ?? []);
     }
-    load();
+    load().catch(()=>setLoadError("Връзката не е достъпна. Опитай отново."));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -189,6 +192,8 @@ export default function ProfilePage() {
     : null;
   const badges = useMemo(() => computeBadges(ratings), [ratings]);
 
+  if (loadError && !profile) return <div className="card m-4 p-5"><p role="alert">{loadError}</p><button className="underline mt-3" onClick={()=>location.reload()}>Опитай отново</button></div>;
+
   if (!profile) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -219,7 +224,7 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-tl-xl bg-walnut">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#EDD9C0" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="rgb(var(--cream))" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
                 <circle cx="12" cy="13" r="4" />
               </svg>
@@ -234,7 +239,7 @@ export default function ProfilePage() {
             {profile.display_name && (
               <p className="text-sm text-accent mt-0.5">@{profile.username}</p>
             )}
-            <p className="text-xs text-accent/60 mt-1">
+            <p className="text-xs text-muted mt-1">
               Член от {new Date(profile.created_at).toLocaleDateString("bg-BG", { month: "long", year: "numeric" })}
             </p>
           </div>
@@ -266,7 +271,7 @@ export default function ProfilePage() {
                   key={b.id}
                   title={b.description}
                   className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium"
-                  style={{ background: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.60)", color: "#7A5230" }}
+                  style={{ background: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.60)", color: "rgb(var(--walnut))" }}
                 >
                   <span>{b.emoji}</span>
                   <span>{b.name}</span>
@@ -279,7 +284,7 @@ export default function ProfilePage() {
         {/* Public profile link */}
         <Link
           href={`/u/${profile.username}`}
-          className="mt-3 flex items-center gap-1.5 text-xs text-accent/70"
+          className="mt-3 flex items-center gap-1.5 text-xs text-muted"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
             <circle cx="12" cy="12" r="10" />
@@ -324,7 +329,7 @@ export default function ProfilePage() {
                       {r.rakija?.producer ?? ""}
                       {r.venue_name ? ` · 📍${r.venue_name}` : ""}
                     </p>
-                    <p className="text-xs text-accent/60 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {new Date(r.created_at).toLocaleDateString("bg-BG", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
@@ -351,7 +356,7 @@ export default function ProfilePage() {
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteId(r.id)}
-                    className="shrink-0 ml-1 flex items-center justify-center rounded-lg p-2 text-accent/50 active:text-red-500 transition-colors"
+                    className="shrink-0 ml-1 flex items-center justify-center rounded-lg p-2 text-muted active:text-red-500 transition-colors"
                     aria-label="Изтрий"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -400,6 +405,7 @@ export default function ProfilePage() {
       {/* Settings tab */}
       {tab === "settings" && (
         <div className="px-4 py-4 flex flex-col gap-4">
+          <ThemePicker />
           <form onSubmit={handleSave} className="flex flex-col gap-4">
             <div>
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-accent" htmlFor="newUsername">
@@ -412,7 +418,7 @@ export default function ProfilePage() {
                   type="text"
                   value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value.toLowerCase())}
-                  className="flex-1 bg-transparent text-oak placeholder:text-accent/60 focus:outline-none text-sm"
+                  className="flex-1 bg-transparent text-oak placeholder:text-muted focus:outline-none text-sm"
                 />
               </div>
             </div>

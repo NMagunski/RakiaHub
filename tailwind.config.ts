@@ -9,14 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        oak:        "#2C1810",
-        walnut:     "#6B4423",
-        accent:     "#C8956D",
-        cream:      "#EDD9C0",
-        background: "#FBF5EC",
-        gold:       "#C8882A",
-        verified:   "#3D7A3D",
-        muted:      "#8A7968",
+        oak:        "rgb(var(--oak) / <alpha-value>)",
+        walnut:     "rgb(var(--walnut) / <alpha-value>)",
+        accent:     "rgb(var(--accent) / <alpha-value>)",
+        cream:      "rgb(var(--cream) / <alpha-value>)",
+        background: "rgb(var(--background) / <alpha-value>)",
+        gold:       "rgb(var(--gold) / <alpha-value>)",
+        verified:   "rgb(var(--verified) / <alpha-value>)",
+        muted:      "rgb(var(--muted) / <alpha-value>)",
       },
       fontFamily: {
         sans:  ["Inter", "system-ui", "sans-serif"],

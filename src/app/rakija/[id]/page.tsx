@@ -3,10 +3,12 @@ export const dynamic = "force-dynamic";
 import { createClient } from "@/lib/supabase/server";
 import { getRakijaById } from "@/lib/queries/rakija";
 import { notFound } from "next/navigation";
-import FruitIcon from "@/components/ui/FruitIcon";
+import { SPIRIT_CATEGORIES } from "@/lib/catalog";
+import ProductArtwork from "@/components/rakija/ProductArtwork";
 import BackButton from "@/components/rakija/BackButton";
 import RateButton from "@/components/rakija/RateButton";
 import WishlistButton from "@/components/rakija/WishlistButton";
+import ShareButton from "@/components/ui/ShareButton";
 
 const FRUIT_BG: Record<string, string> = {
   plum: "Сливова", grape: "Гроздова", apricot: "Кайсиева",
@@ -32,8 +34,9 @@ export default async function RakijaPage({ params }: { params: { id: string } })
   let rakija;
   try {
     rakija = await getRakijaById(supabase, params.id);
-  } catch {
-    notFound();
+  } catch (error) {
+    if ((error as {code?:string}).code === "PGRST116" || (error as {code?:string}).code === "22P02") notFound();
+    throw error;
   }
 
   // Fetch current user's rating for this rakija (if logged in)
@@ -52,6 +55,7 @@ export default async function RakijaPage({ params }: { params: { id: string } })
       .select("id, score, aroma_tags, taste_tags, finish_tags, color_tags, aroma_note, taste_note, finish_note, venue_name, notes")
       .eq("rakija_id", params.id)
       .eq("user_id", user.id)
+      .order("tasted_at", { ascending: false }).order("created_at", { ascending: false }).order("id", { ascending: false }).limit(1)
       .maybeSingle();
     myRating = data;
   }
@@ -75,7 +79,7 @@ export default async function RakijaPage({ params }: { params: { id: string } })
   ];
 
   return (
-    <div className="px-4 pt-4 pb-8">
+    <div className="px-4 pt-4 pb-8 max-w-3xl mx-auto">
       {/* Nav */}
       <div className="mb-5">
         <BackButton />
@@ -83,7 +87,7 @@ export default async function RakijaPage({ params }: { params: { id: string } })
 
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">
-        <FruitIcon fruit={rakija.fruit} size="lg" />
+        <div className="w-28 shrink-0"><ProductArtwork product={rakija} /></div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-serif text-xl font-bold text-oak">{rakija.name}</h1>
@@ -129,9 +133,18 @@ export default async function RakijaPage({ params }: { params: { id: string } })
         />
       </div>
 
-      {/* Wishlist button */}
-      <div className="mb-6">
-        <WishlistButton rakijaId={rakija.id} initialState={isWishlisted} />
+      {/* Wishlist + Share row */}
+      <div className="mb-6 flex gap-2">
+        <div className="flex-1">
+          <WishlistButton rakijaId={rakija.id} initialState={isWishlisted} />
+        </div>
+        <ShareButton
+          title={rakija.name}
+          text={rakija.producer ? `${rakija.producer} · RAKIQ` : "RAKIQ"}
+          url={`https://rakia-hub.vercel.app/rakija/${rakija.id}`}
+          className="flex items-center justify-center rounded-2xl border px-4 transition-colors"
+          style={{ borderColor: "rgba(107,68,35,0.25)", color: "rgb(var(--walnut))" } as React.CSSProperties}
+        />
       </div>
 
       {/* My rating details */}
@@ -143,7 +156,7 @@ export default async function RakijaPage({ params }: { params: { id: string } })
             <div className="flex items-center gap-3">
               <div
                 className="flex flex-col items-center justify-center rounded-xl px-3 py-2"
-                style={{ background: "linear-gradient(145deg, #D4A574, #C8882A)", minWidth: "3rem" }}
+                style={{ background: "linear-gradient(145deg, #D4A574, rgb(var(--gold)))", minWidth: "3rem" }}
               >
                 <span className="text-lg font-bold text-white leading-none">{myRating.score}</span>
                 <span className="text-[9px] text-white/65 leading-none">/10</span>
@@ -209,6 +222,7 @@ export default async function RakijaPage({ params }: { params: { id: string } })
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-accent">Детайли</h2>
         <div className="card divide-y divide-accent/10">
+          <Row label="Категория" value={SPIRIT_CATEGORIES[rakija.category || "rakija"] || rakija.category} />
           {rakija.fruit && <Row label="Вид" value={FRUIT_BG[rakija.fruit] ?? rakija.fruit} />}
           {rakija.region && <Row label="Регион" value={rakija.region} />}
           {rakija.country && <Row label="Страна" value={rakija.country} />}

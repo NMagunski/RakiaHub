@@ -9,6 +9,9 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      countries: { Row: { id: string; name: string }; Insert: { id: string; name: string }; Update: {name?:string}; Relationships: [] };
+      origin_regions: { Row: { id: string; country_id: string; name: string; latitude: number; longitude: number; source_url: string; attribution: string }; Insert: never; Update: never; Relationships: [] };
+
       profiles: {
         Row: {
           id: string;
@@ -18,6 +21,7 @@ export type Database = {
           is_admin: boolean;
           created_at: string;
           age_verified_at: string | null;
+          theme: "amber" | "atlas";
         };
         Insert: {
           id: string;
@@ -27,6 +31,7 @@ export type Database = {
           is_admin?: boolean;
           created_at?: string;
           age_verified_at?: string | null;
+          theme?: "amber" | "atlas";
         };
         Update: {
           username?: string;
@@ -34,6 +39,7 @@ export type Database = {
           avatar_url?: string | null;
           is_admin?: boolean;
           age_verified_at?: string | null;
+          theme?: "amber" | "atlas";
         };
         Relationships: [];
       };
@@ -46,6 +52,14 @@ export type Database = {
           fruit: string | null;
           region: string | null;
           country: string;
+          country_id: string | null;
+          region_id: string | null;
+          origin_verified: boolean;
+          category: string;
+          aliases: string[];
+          image_rights: string | null;
+          image_source: string | null;
+          image_attribution: string | null;
           vintage_year: number | null;
           abv: number | null;
           description: string | null;
@@ -69,10 +83,20 @@ export type Database = {
           abv?: number | null;
           description?: string | null;
           image_url?: string | null;
+          image_rights?: string | null;
+          image_source?: string | null;
+          image_attribution?: string | null;
+          category?: string;
+          aliases?: string[];
           is_verified?: boolean;
           added_by?: string | null;
         };
         Update: {
+          country_id?: string | null;
+          region_id?: string | null;
+          origin_verified?: boolean;
+          origin_source?: string | null;
+          origin_reviewed_at?: string;
           name?: string;
           producer?: string | null;
           fruit?: string | null;
@@ -82,6 +106,11 @@ export type Database = {
           abv?: number | null;
           description?: string | null;
           image_url?: string | null;
+          image_rights?: string | null;
+          image_source?: string | null;
+          image_attribution?: string | null;
+          category?: string;
+          aliases?: string[];
           is_verified?: boolean;
           type?: "commercial" | "personal" | "homemade";
         };
@@ -111,6 +140,7 @@ export type Database = {
           rakija_id: string;
           user_id: string;
           score: number;
+          tasted_at: string;
           aroma_tags: string[] | null;
           taste_tags: string[] | null;
           finish_tags: string[] | null;
@@ -142,6 +172,8 @@ export type Database = {
           is_private?: boolean;
         };
         Update: {
+          score?: number;
+          tasted_at?: string;
           aroma_tags?: string[] | null;
           taste_tags?: string[] | null;
           finish_tags?: string[] | null;
@@ -249,6 +281,13 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      search_catalog: { Args: { q: string; fruit_filter?: string; country_filter?: string; region_filter?: string; verified_filter?: boolean; sort_key?: string; page_offset?: number; tried_only?: boolean }; Returns: Database["public"]["Tables"]["rakija"]["Row"][] };
+      toggle_wishlist: { Args: { p_id: string }; Returns: boolean };
+      merge_products: { Args: { source_id: string; target_id: string }; Returns: undefined };
+      save_tasting: { Args: { p: Json }; Returns: string };
+      review_suggestion: { Args: { p_id: string; p_action: string }; Returns: undefined };
+      public_profile: { Args: { p_username: string }; Returns: Json };
+
       are_friends: {
         Args: { uid_a: string; uid_b: string };
         Returns: boolean;

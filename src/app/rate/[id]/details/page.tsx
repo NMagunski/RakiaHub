@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { AROMA_TAGS, TASTE_TAGS, FINISH_TAGS, COLOR_TAGS } from "@/types/app";
 
 type TagSection = {
@@ -33,6 +34,27 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const [loading, setLoading] = useState(true);
+  const [score, setScore] = useState(7);
+  const [tastedAt, setTastedAt] = useState("");
+  const [isPrivate, setIsPrivate] = useState(true);
+  useEffect(() => {
+    let active = true;
+    const client = createClient();
+    void (async () => {
+      const { data: { user } } = await client.auth.getUser();
+      const { data, error } = await client.from("ratings").select("*").eq("id", ratingId).eq("user_id", user?.id ?? "").single();
+      if (!active) return;
+      if (error || !data) { setSaveError("Дегустацията не е достъпна."); return; }
+      setTags({aroma_tags:data.aroma_tags||[],taste_tags:data.taste_tags||[],finish_tags:data.finish_tags||[],color_tags:data.color_tags||[]});
+      setNotes({aroma_note:data.aroma_note||"",taste_note:data.taste_note||"",finish_note:data.finish_note||""});
+      setVenueName(data.venue_name||"");setGeneralNote(data.notes||"");setScore(data.score);setIsPrivate(data.is_private);
+      const date = new Date(data.tasted_at); date.setMinutes(date.getMinutes()-date.getTimezoneOffset()); setTastedAt(date.toISOString().slice(0,16));
+      setLoading(false);
+    })().catch(()=>{if(active)setSaveError("Грешка при зареждане. Презареди страницата.");});
+    return () => { active = false; };
+  }, [ratingId]);
+
   function toggleTag(field: string, tag: string) {
     setTags((prev) => {
       const current = prev[field] ?? [];
@@ -53,7 +75,7 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id: ratingId,
+        id: ratingId, score, is_private: isPrivate, tasted_at: new Date(tastedAt).toISOString(),
         aroma_tags: tags.aroma_tags.length ? tags.aroma_tags : null,
         taste_tags: tags.taste_tags.length ? tags.taste_tags : null,
         finish_tags: tags.finish_tags.length ? tags.finish_tags : null,
@@ -88,6 +110,10 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
       </div>
 
       <div className="flex flex-col gap-6 px-4 py-5 pb-32">
+        {loading && <p role="status">Зареждане на дегустацията…</p>}
+        <label className="label">Оценка<input type="number" min="1" max="10" step="0.5" className="input" value={score} onChange={e=>setScore(Number(e.target.value))} /></label>
+        <label className="label">Дата<input type="datetime-local" className="input" value={tastedAt} onChange={e=>setTastedAt(e.target.value)} /></label>
+        <label className="flex gap-2 text-sm"><input type="checkbox" checked={isPrivate} onChange={e=>setIsPrivate(e.target.checked)} />Лична дегустация</label>
         {SECTIONS.map((s) => (
           <section key={s.field}>
             <h2 className="mb-3 text-sm font-semibold text-oak">{s.label}</h2>
@@ -154,7 +180,7 @@ export default function RatingDetailsPage({ params }: { params: { id: string } }
         )}
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || loading}
           className="w-full rounded-2xl bg-walnut py-4 text-base font-bold text-cream disabled:opacity-60"
         >
           {saving ? "Запазване…" : "Запази детайлите"}

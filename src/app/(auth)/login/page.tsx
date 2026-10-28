@@ -48,7 +48,7 @@ export default function LoginPage() {
     <main
       className="flex min-h-screen flex-col"
       style={{
-        background: "linear-gradient(175deg, #F5EAD5 0%, #FBF5EC 45%, #FBF5EC 100%)",
+        background: "linear-gradient(175deg, #F5EAD5 0%, rgb(var(--background)) 45%, rgb(var(--background)) 100%)",
       }}
     >
       {/* Hero */}
@@ -57,26 +57,26 @@ export default function LoginPage() {
         <div
           className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
           style={{
-            background: "linear-gradient(145deg, #6B4423 0%, #2C1810 100%)",
+            background: "linear-gradient(145deg, rgb(var(--walnut)) 0%, rgb(var(--oak)) 100%)",
             boxShadow: "0 8px 32px rgba(107,68,35,0.35), 0 2px 8px rgba(44,24,16,0.20)",
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden>
             <path
               d="M9 3h6M10 3v2.5c0 .5-.4 1-.9 1.4L7.5 8.5V20a1 1 0 001 1h7a1 1 0 001-1V8.5L14.9 6.9C14.4 6.5 14 6 14 5.5V3"
-              stroke="#EDD9C0"
+              stroke="rgb(var(--cream))"
               strokeWidth="1.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <path d="M7.5 14h9" stroke="#EDD9C0" strokeWidth="1.5" strokeLinecap="round"/>
+            <path d="M7.5 14h9" stroke="rgb(var(--cream))" strokeWidth="1.5" strokeLinecap="round"/>
           </svg>
         </div>
 
         <h1 className="font-serif font-bold text-oak text-center" style={{ fontSize: "1.75rem", lineHeight: 1.25 }}>
           Открий вкуса<br />на България
         </h1>
-        <p className="mt-2 text-center text-sm font-medium" style={{ color: "#8A7968" }}>
+        <p className="mt-2 text-center text-sm font-medium" style={{ color: "rgb(var(--muted))" }}>
           Оцени, събери и сподели всяка глътка ракия
         </p>
       </div>
@@ -171,7 +171,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPass((v) => !v)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
-                style={{ color: "#8A7968" }}
+                style={{ color: "rgb(var(--muted))" }}
                 aria-label={showPass ? "Скрий паролата" : "Покажи паролата"}
               >
                 {showPass ? (
@@ -225,7 +225,7 @@ export default function LoginPage() {
         </form>}
 
         {!forgotMode && (
-          <p className="mt-6 text-center text-sm" style={{ color: "#8A7968" }}>
+          <p className="mt-6 text-center text-sm" style={{ color: "rgb(var(--muted))" }}>
             Нямаш профил?{" "}
             <Link href="/register" className="font-semibold text-walnut underline underline-offset-2">
               Регистрирай се

@@ -91,7 +91,7 @@ export default function BottomNav() {
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 safe-bottom"
       style={{
-        background: "rgba(251,245,236,0.92)",
+        background: "rgb(var(--background) / .94)",
         backdropFilter: "blur(24px) saturate(1.8)",
         WebkitBackdropFilter: "blur(24px) saturate(1.8)",
         borderTop: "1px solid rgba(44,24,16,0.07)",
@@ -112,7 +112,7 @@ export default function BottomNav() {
               <span
                 className="absolute top-1.5 h-1 w-5 rounded-full transition-opacity duration-200"
                 style={{
-                  background: "linear-gradient(90deg, #6B4423, #2C1810)",
+                  background: "linear-gradient(90deg, rgb(var(--walnut)), rgb(var(--oak)))",
                   opacity: active ? 1 : 0,
                 }}
               />
@@ -124,7 +124,7 @@ export default function BottomNav() {
               {tab.badge && pendingCount > 0 && (
                 <span
                   className="absolute top-1 right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-white"
-                  style={{ background: "linear-gradient(135deg, #6B4423, #2C1810)" }}
+                  style={{ background: "linear-gradient(135deg, rgb(var(--walnut)), rgb(var(--oak)))" }}
                 >
                   {pendingCount > 9 ? "9+" : pendingCount}
                 </span>
@@ -132,7 +132,7 @@ export default function BottomNav() {
 
               <span
                 className="text-[10px] font-semibold tracking-wide transition-colors duration-200"
-                style={{ color: active ? "#6B4423" : "rgba(138,121,104,0.75)" }}
+                style={{ color: active ? "rgb(var(--walnut))" : "rgb(var(--muted))" }}
               >
                 {tab.label}
               </span>

@@ -128,7 +128,7 @@ export default function AdminPromotionsPage() {
                     <span>📅 {new Date(s.created_at).toLocaleDateString("bg-BG")}</span>
                   </div>
                   {s.reviewer && s.reviewed_at && (
-                    <p className="mt-1 text-xs text-accent/70">
+                    <p className="mt-1 text-xs text-muted">
                       Прегледано от @{s.reviewer.username} на {new Date(s.reviewed_at).toLocaleDateString("bg-BG")}
                     </p>
                   )}

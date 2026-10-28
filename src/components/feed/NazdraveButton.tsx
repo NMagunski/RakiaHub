@@ -77,12 +77,12 @@ export default function NazdraveButton({ ratingId, initialCount, initialReacted,
         disabled={!userId}
         className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition-all active:scale-95 ${popping ? "animate-nazdrave" : ""}`}
         style={reacted ? {
-          background: "linear-gradient(135deg, #6B4423, #2C1810)",
+          background: "linear-gradient(135deg, rgb(var(--walnut)), rgb(var(--oak)))",
           color: "#FFFFFF",
           boxShadow: "0 2px 12px rgba(107,68,35,0.35)",
         } : {
           background: "rgba(107,68,35,0.08)",
-          color: "#6B4423",
+          color: "rgb(var(--walnut))",
           border: "1.5px solid rgba(107,68,35,0.18)",
         }}
       >
@@ -95,7 +95,7 @@ export default function NazdraveButton({ ratingId, initialCount, initialReacted,
         <button
           onClick={(e) => { e.stopPropagation(); setShowReactors((v) => !v); }}
           className="rounded-full px-2 py-1 text-xs font-bold tabular-nums transition-colors"
-          style={{ color: reacted ? "#6B4423" : "rgba(107,68,35,0.65)", background: "rgba(107,68,35,0.07)" }}
+          style={{ color: reacted ? "rgb(var(--walnut))" : "rgba(107,68,35,0.65)", background: "rgba(107,68,35,0.07)" }}
         >
           {count}
         </button>
@@ -114,7 +114,7 @@ export default function NazdraveButton({ ratingId, initialCount, initialReacted,
               border: "1px solid rgba(44,24,16,0.08)",
             }}
           >
-            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "#8A7968" }}>
+            <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wide" style={{ color: "rgb(var(--muted))" }}>
               Наздраве от
             </p>
             {reactors.map((r) => (

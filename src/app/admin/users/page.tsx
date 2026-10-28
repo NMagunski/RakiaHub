@@ -27,10 +27,8 @@ export default function AdminUsersPage() {
   useEffect(() => { load(); }, []);
 
   async function toggleAdmin(user: Profile) {
-    await supabase
-      .from("profiles")
-      .update({ is_admin: !user.is_admin })
-      .eq("id", user.id);
+    const response = await fetch("/api/admin/users", { method: "PATCH", headers: {"Content-Type":"application/json"}, body: JSON.stringify({userId:user.id,isAdmin:!user.is_admin}) });
+    if (!response.ok) { alert("Ролята не беше обновена."); return; }
     load();
   }
 

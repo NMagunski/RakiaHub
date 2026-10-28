@@ -1,0 +1,13 @@
+import ts from 'typescript';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const code=ts.transpileModule(readFileSync('src/lib/passport.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+const exports={};vm.runInNewContext(code,{exports,Set});
+const products=[{id:'a',origin_verified:true,country_id:'BG',region_id:'troyan'}, {id:'b',origin_verified:true,country_id:'RS',region_id:null},{id:'c',origin_verified:false,country_id:'MK',region_id:'unverified'}];
+const rows=[{id:'1',rakija_id:'a',score:4,tasted_at:'2026-01-01',venue_name:'Sofia'},{id:'2',rakija_id:'a',score:8,tasted_at:'2026-02-01',venue_name:'Skopje'},{id:'3',rakija_id:'b',score:7,tasted_at:'2026-02-02'},{id:'4',rakija_id:'c',score:9,tasted_at:'2026-02-02'}];
+assert.equal(JSON.stringify(exports.passportSummary(rows,products)),JSON.stringify({products:3,countries:2,regions:1}));
+assert.equal(exports.latestTasting(rows.filter(r=>r.rakija_id==='a')).score,8);
+assert.equal(exports.latestTasting(rows.filter(r=>r.id==='1')).score,4);
+assert.equal(JSON.stringify(exports.passportSummary([],products)),JSON.stringify({products:0,countries:0,regions:0}));
+console.log('PASS: unique products, verified regions, country-only origin, venue independence, latest tasting and empty passport');

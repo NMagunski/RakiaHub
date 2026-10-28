@@ -30,7 +30,7 @@ export default function RatingSlider({ value, onChange }: Props) {
         {/* Tick marks */}
         <div className="mt-1 flex justify-between px-0.5">
           {STEPS.map((n) => (
-            <span key={n} className="text-[10px] text-accent/60">{n}</span>
+            <span key={n} className="text-[10px] text-muted">{n}</span>
           ))}
         </div>
       </div>

@@ -1,8 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/register", "/invite", "/u"];
-const ALWAYS_PATHS = ["/auth/reset-password", "/auth/callback", "/terms"]; // accessible regardless of auth state
+const PUBLIC_PATHS = ["/login", "/register"];
+const ALWAYS_PATHS = ["/auth/reset-password", "/auth/callback", "/terms", "/offline", "/invite", "/u"]; // accessible regardless of auth state
 const ADMIN_PATHS = ["/admin"];
 
 export async function middleware(request: NextRequest) {
@@ -34,11 +34,13 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
-  const isAlways = ALWAYS_PATHS.some((p) => pathname.startsWith(p));
-  const isAdmin  = ADMIN_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic = PUBLIC_PATHS.some((p) => (pathname === p || pathname.startsWith(p + "/")));
+  const isAlways = ALWAYS_PATHS.some((p) => (pathname === p || pathname.startsWith(p + "/")));
+  const isAdmin  = ADMIN_PATHS.some((p) => (pathname === p || pathname.startsWith(p + "/")));
 
   if (isAlways) return supabaseResponse;
+
+  if (!user && pathname.startsWith("/api/")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));

@@ -1,5 +1,6 @@
 "use client";
 
+import { SPIRIT_CATEGORIES } from "@/lib/catalog";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Rakija } from "@/types/app";
@@ -30,6 +31,12 @@ export default function RakijaForm({ initial, onSaved, onCancel }: Props) {
   const [vintageYear, setVintageYear] = useState(initial?.vintage_year?.toString() ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [isVerified, setIsVerified] = useState(initial?.is_verified ?? false);
+  const [aliases,setAliases]=useState((initial?.aliases||[]).join(", "));
+  const [category,setCategory]=useState(initial?.category||"rakija");
+  const [imageUrl,setImageUrl]=useState(initial?.image_url||"");
+  const [imageSource,setImageSource]=useState(initial?.image_source||"");
+  const [imageRights,setImageRights]=useState(initial?.image_rights||"");
+  const [imageAttribution,setImageAttribution]=useState(initial?.image_attribution||"");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +46,7 @@ export default function RakijaForm({ initial, onSaved, onCancel }: Props) {
     setSaving(true);
 
     const payload = {
+      aliases:aliases.split(",").map(a=>a.trim()).filter(Boolean), category, image_url:imageUrl||null, image_source:imageSource||null, image_rights:imageRights||null, image_attribution:imageAttribution||null,
       name: name.trim(),
       producer: producer.trim() || null,
       fruit: fruit || null,
@@ -105,6 +113,15 @@ export default function RakijaForm({ initial, onSaved, onCancel }: Props) {
         <div className="flex items-center gap-2 self-end pb-1">
           <input type="checkbox" id="verified" checked={isVerified} onChange={e => setIsVerified(e.target.checked)} className="h-4 w-4 accent-verified" />
           <label htmlFor="verified" className="text-sm text-oak">Верифицирана</label>
+        </div>
+        <div className="col-span-2 space-y-3">
+          <label className="label">Псевдоними (разделени със запетая)<input className="input" value={aliases} onChange={e=>setAliases(e.target.value)} /></label>
+          <label className="label">Категория<select className="input" value={category} onChange={e=>setCategory(e.target.value)}>{Object.entries(SPIRIT_CATEGORIES).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label>
+          <p className="text-xs text-muted">Снимка се показва само с документиран източник и права. При липса се използва авторска скица.</p>
+          <label className="label">URL на разрешена снимка<input type="url" className="input" value={imageUrl} onChange={e=>setImageUrl(e.target.value)} /></label>
+          <label className="label">Източник<input type="url" required={!!imageUrl} className="input" value={imageSource} onChange={e=>setImageSource(e.target.value)} /></label>
+          <label className="label">Лиценз / документ за разрешение<input required={!!imageUrl} className="input" value={imageRights} onChange={e=>setImageRights(e.target.value)} placeholder="CC BY 4.0 или връзка към писмено разрешение" /></label>
+          <label className="label">Атрибуция<input className="input" value={imageAttribution} onChange={e=>setImageAttribution(e.target.value)} /></label>
         </div>
         <div className="col-span-2">
           <label className="label">Описание</label>

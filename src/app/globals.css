@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #FBF5EC;
-  --foreground: #2C1810;
-}
 
 html {
   background: #EFE0CA;
@@ -20,7 +16,7 @@ body {
     radial-gradient(ellipse 140% 50% at 50% -5%,  rgba(200,136,42,0.40) 0%, transparent 55%),
     radial-gradient(ellipse 80%  60% at 110% 100%, rgba(107,68,35,0.22)  0%, transparent 55%),
     radial-gradient(ellipse 70%  50% at -10% 60%,  rgba(200,149,109,0.20) 0%, transparent 50%),
-    linear-gradient(160deg, #FDF7EE 0%, #FBF5EC 55%, #F5EAD5 100%);
+    linear-gradient(160deg, #FDF7EE 0%, rgb(var(--background)) 55%, #F5EAD5 100%);
 }
 
 /* Safe area insets */
@@ -104,7 +100,7 @@ body {
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, #2C1810 0%, #6B4423 100%);
+  background: linear-gradient(135deg, rgb(var(--oak)) 0%, rgb(var(--walnut)) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -118,10 +114,10 @@ body {
   border-radius: 9999px;
   background: linear-gradient(
     to right,
-    #C8882A 0%,
-    #C8882A calc((var(--val, 7) - 1) / 9 * 100%),
-    #EDD9C0 calc((var(--val, 7) - 1) / 9 * 100%),
-    #EDD9C0 100%
+    rgb(var(--gold)) 0%,
+    rgb(var(--gold)) calc((var(--val, 7) - 1) / 9 * 100%),
+    rgb(var(--cream)) calc((var(--val, 7) - 1) / 9 * 100%),
+    rgb(var(--cream)) 100%
   );
   outline: none;
   cursor: pointer;
@@ -131,7 +127,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6B4423 0%, #2C1810 100%);
+  background: linear-gradient(135deg, rgb(var(--walnut)) 0%, rgb(var(--oak)) 100%);
   box-shadow: 0 2px 12px rgba(107, 68, 35, 0.45);
   cursor: grab;
 }
@@ -139,7 +135,7 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6B4423 0%, #2C1810 100%);
+  background: linear-gradient(135deg, rgb(var(--walnut)) 0%, rgb(var(--oak)) 100%);
   border: none;
   box-shadow: 0 2px 12px rgba(107, 68, 35, 0.45);
   cursor: grab;
@@ -159,11 +155,11 @@ body {
   }
   .label {
     @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider;
-    color: #8A7968;
+    color: rgb(var(--muted));
   }
   .btn-primary {
     @apply w-full rounded-xl py-3.5 text-sm font-semibold text-white transition-all active:scale-[0.97] disabled:opacity-55 disabled:cursor-not-allowed;
-    background: linear-gradient(135deg, #6B4423 0%, #2C1810 100%);
+    background: linear-gradient(135deg, rgb(var(--walnut)) 0%, rgb(var(--oak)) 100%);
     box-shadow: 0 4px 16px rgba(107, 68, 35, 0.40), 0 1px 0 rgba(255,255,255,0.12) inset;
     letter-spacing: 0.01em;
   }
@@ -175,3 +171,21 @@ body {
     transform: translateY(0) scale(0.97);
   }
 }
+
+/* Shared semantic palette: every screen uses the same tokens. */
+:root { --oak:44 24 16; --walnut:107 68 35; --accent:139 91 49; --cream:237 217 192; --background:251 245 236; --gold:155 94 17; --verified:61 122 61; --muted:112 98 84; --surface:#fffdf8; --foreground:rgb(var(--oak)); }
+:root[data-theme="atlas"] { --oak:20 54 43; --walnut:32 88 65; --accent:63 109 77; --cream:224 234 210; --background:247 249 240; --gold:94 112 26; --verified:35 105 65; --muted:85 106 94; --surface:#ffffff; }
+html, body { background:rgb(var(--background)); color:rgb(var(--oak)); }
+body { background-image:radial-gradient(ellipse at top right,rgb(var(--cream) / .7),transparent 65%); }
+[data-theme="atlas"] body { background-image:repeating-linear-gradient(30deg,transparent 0 59px,rgb(var(--walnut) / .035) 60px 61px); }
+.card,.card-xl { background:var(--surface); border-color:rgb(var(--oak) / .12); }
+.glass-panel { background:rgb(var(--background) / .94); }
+.btn-primary { background:linear-gradient(135deg,rgb(var(--walnut)),rgb(var(--oak))); }
+.text-gradient { background:linear-gradient(135deg,rgb(var(--oak)),rgb(var(--walnut))); background-clip:text; }
+.label { color:rgb(var(--muted)); }
+:focus-visible { outline:3px solid rgb(var(--walnut)); outline-offset:4px; }
+button,a,input,select,textarea { -webkit-tap-highlight-color:transparent; }
+button { transition:transform .15s,background-color .15s; }
+button:active { transform:scale(.97); }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+@media(min-width:900px) { main { width:100%; max-width:1100px; margin-inline:auto; } }

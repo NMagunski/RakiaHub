@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { searchRakija } from "@/lib/queries/rakija";
+import origins from "@/lib/origin-registry.json";
 import RakijaCard from "@/components/rakija/RakijaCard";
 import type { Rakija } from "@/types/app";
 
@@ -34,44 +35,53 @@ export default function DiscoverPage() {
   const [sortBy, setSortBy] = useState<SortBy>("rating_count");
   const [results, setResults] = useState<RakijaRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [, startTransition] = useTransition();
+  const [error, setError] = useState("");
+  const [country, setCountry] = useState("");
+  const [region, setRegion] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [recent, setRecent] = useState<string[]>([]);
+  const [tried, setTried] = useState(false);
+  const sequence = useRef(0);
 
   // Keep a ref to current filter values so load() doesn't need them as dependencies
   const filtersRef = useRef({ activeFruit, verifiedOnly, sortBy });
   filtersRef.current = { activeFruit, verifiedOnly, sortBy };
 
   async function load(q: string) {
+    const request = ++sequence.current;
+    setError("");
     setLoading(true);
     try {
       const { activeFruit: fruit, verifiedOnly: verified, sortBy: sort } = filtersRef.current;
       const data = await searchRakija(supabase, q, {
-        fruit,
+        fruit, country, region, offset, triedOnly: tried,
         verifiedOnly: verified,
         sortBy: sort,
       });
+      if (request !== sequence.current) return;
       setResults(data as RakijaRow[]);
-    } catch (e) {
-      console.error(e);
+      if (q.trim()) {
+        const history = [q.trim(), ...JSON.parse(localStorage.getItem("rakiq-searches") || "[]").filter((v: string) => v !== q.trim())].slice(0, 6);
+        localStorage.setItem("rakiq-searches", JSON.stringify(history)); setRecent(history);
+      }
+    } catch {
+      if (request === sequence.current) setError("Търсенето не е достъпно. Опитай отново.");
     } finally {
-      setLoading(false);
+      if (request === sequence.current) setLoading(false);
     }
   }
 
-  // Initial load
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(query); }, []);
-
-  // Reload when filters change
   useEffect(() => {
-    startTransition(() => { load(query); });
+    try { setRecent(JSON.parse(localStorage.getItem("rakiq-searches") || "[]")); } catch { /* fresh history */ }
+  }, []);
+  useEffect(() => { setOffset(0); }, [activeFruit, verifiedOnly, sortBy]);
+  useEffect(() => {
+    ++sequence.current;
+    const timer = setTimeout(() => { void load(query); }, 300);
+    return () => { clearTimeout(timer); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeFruit, verifiedOnly, sortBy]);
-
-  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
-    const val = e.target.value;
-    setQuery(val);
-    startTransition(() => { load(val); });
-  }
+  }, [query, activeFruit, verifiedOnly, sortBy, country, region, offset, tried]);
+  function handleSearch(e: React.ChangeEvent<HTMLInputElement>) { setQuery(e.target.value); setOffset(0); }
 
   const hasActiveFilters = activeFruit !== null || verifiedOnly || sortBy !== "rating_count";
 
@@ -95,7 +105,7 @@ export default function DiscoverPage() {
             value={query}
             onChange={handleSearch}
             placeholder="Търси по име, производител, вид…"
-            className="flex-1 bg-transparent text-sm text-oak placeholder:text-accent/60 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-oak placeholder:text-muted focus:outline-none"
             autoComplete="off"
           />
           {query && (
@@ -113,8 +123,8 @@ export default function DiscoverPage() {
                 onClick={() => setActiveFruit(active ? null : opt.value)}
                 className="shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-all"
                 style={active
-                  ? { background: "linear-gradient(135deg,#6B4423,#2C1810)", color: "#FFFFFF", boxShadow: "0 2px 10px rgba(107,68,35,0.35)" }
-                  : { background: "rgba(255,255,255,0.90)", color: "#6B4423", border: "1px solid rgba(44,24,16,0.12)" }
+                  ? { background: "linear-gradient(135deg,rgb(var(--walnut)),rgb(var(--oak)))", color: "#FFFFFF", boxShadow: "0 2px 10px rgba(107,68,35,0.35)" }
+                  : { background: "rgba(255,255,255,0.90)", color: "rgb(var(--walnut))", border: "1px solid rgba(44,24,16,0.12)" }
                 }
               >
                 {opt.label}
@@ -148,7 +158,7 @@ export default function DiscoverPage() {
             className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium transition-all"
             style={verifiedOnly
               ? { background: "rgba(61,122,61,0.12)", color: "#3D7A3D", border: "1px solid rgba(61,122,61,0.30)" }
-              : { background: "rgba(255,255,255,0.90)", color: "#6B4423", border: "1px solid rgba(44,24,16,0.12)" }
+              : { background: "rgba(255,255,255,0.90)", color: "rgb(var(--walnut))", border: "1px solid rgba(44,24,16,0.12)" }
             }
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
@@ -161,7 +171,7 @@ export default function DiscoverPage() {
           {hasActiveFilters && (
             <button
               onClick={() => { setActiveFruit(null); setVerifiedOnly(false); setSortBy("rating_count"); }}
-              className="text-xs text-accent/70 underline"
+              className="text-xs text-muted underline"
             >
               Изчисти
             </button>
@@ -169,8 +179,20 @@ export default function DiscoverPage() {
         </div>
       </div>
 
+      <section className="px-4 py-3 space-y-3">
+        <h1 className="font-serif text-3xl text-oak">Открий следващата история.</h1>
+        <p className="text-sm text-muted">По плод, произход или спомен от последната чаша.</p>
+        <div className="flex flex-wrap gap-2">
+          <select aria-label="Държава" className="input !w-auto" value={country} onChange={e=>{setCountry(e.target.value);setRegion("");setOffset(0);}}><option value="">Всички държави</option><option value="BG">България</option><option value="RS">Сърбия</option><option value="MK">Северна Македония</option></select>
+          <select aria-label="Регион" className="input !w-auto" value={region} onChange={e=>{setRegion(e.target.value);setOffset(0);}}><option value="">Всички региони</option>{origins.filter(r=>!country||r.country_id===country).map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</select>
+          <button aria-pressed={tried} className="rounded-xl border border-accent px-3 text-sm" onClick={()=>{setTried(!tried);setOffset(0);}}>Вече опитани</button>
+        </div>
+        {!query && recent.length>0 && <div className="flex flex-wrap gap-2 text-xs"><span>Скорошни:</span>{recent.map(q=><button className="underline" key={q} onClick={()=>{setQuery(q);setOffset(0);}}>{q}</button>)}</div>}
+        <button className="text-sm font-semibold text-walnut underline" onClick={()=>window.dispatchEvent(new CustomEvent("open-rating-sheet",{detail:{query}}))}>Не я намираш? Добави ракия →</button>
+        {error && <p role="alert" className="text-red-700">{error} <button className="underline" onClick={()=>load(query)}>Повтори</button></p>}
+      </section>
       {/* Results */}
-      <div className="flex flex-col gap-2 px-4 pb-4 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4 pb-4 pt-2">
         {loading ? (
           <SkeletonList />
         ) : results.length === 0 ? (
@@ -182,7 +204,7 @@ export default function DiscoverPage() {
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent("open-rating-sheet", { detail: { query } }))}
                 className="mt-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-cream"
-                style={{ background: "linear-gradient(135deg,#6B4423,#2C1810)" }}
+                style={{ background: "linear-gradient(135deg,rgb(var(--walnut)),rgb(var(--oak)))" }}
               >
                 + Добави личен запис
               </button>
@@ -190,13 +212,14 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <>
-            <p className="pb-1 text-xs text-accent">{results.length} резултата</p>
+            <p className="pb-1 text-xs text-accent md:col-span-2">{results.length} резултата</p>
             {results.map((r) => (
               <RakijaCard key={r.id} rakija={r} />
             ))}
           </>
         )}
       </div>
+      <div className="flex justify-between p-4"><button disabled={offset===0} onClick={()=>setOffset(Math.max(0,offset-40))} className="disabled:opacity-40">← Предишни</button><span className="text-xs">Страница {offset/40+1}</span><button disabled={results.length<40} onClick={()=>setOffset(offset+40)} className="disabled:opacity-40">Следващи →</button></div>
     </div>
   );
 }

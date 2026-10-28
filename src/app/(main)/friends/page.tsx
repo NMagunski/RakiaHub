@@ -263,7 +263,7 @@ export default function FriendsPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Потребителско име…"
-              className="flex-1 bg-transparent text-oak placeholder:text-accent/60 focus:outline-none text-sm"
+              className="flex-1 bg-transparent text-oak placeholder:text-muted focus:outline-none text-sm"
             />
           </div>
 
@@ -284,9 +284,9 @@ export default function FriendsPage() {
                   {u.display_name && <p className="text-xs text-accent">@{u.username}</p>}
                 </div>
                 {isFriend ? (
-                  <span className="text-xs text-accent/60">Приятел</span>
+                  <span className="text-xs text-muted">Приятел</span>
                 ) : isSent ? (
-                  <span className="text-xs text-accent/60">Изпратено</span>
+                  <span className="text-xs text-muted">Изпратено</span>
                 ) : (
                   <button
                     onClick={() => sendRequest(u.id)}

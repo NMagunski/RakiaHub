@@ -48,6 +48,15 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
   const router = useRouter();
   const supabase = createClient();
   const searchRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const requestId = useRef<string>("");
+  const [tastedAt, setTastedAt] = useState("");
+  const [isPrivate, setIsPrivate] = useState(true);
+  const [entryKind, setEntryKind] = useState("personal");
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoConsent, setPhotoConsent] = useState(false);
+  const photoPath = useRef<string | null>(null);
+  const [originClaim, setOriginClaim] = useState("");
 
   const [step, setStep] = useState<Step>(preselected ? "score" : "search");
   const [query, setQuery] = useState(initialQuery);
@@ -55,6 +64,7 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<SelectedRakija | null>(preselected ?? null);
   const [score, setScore] = useState(7.0);
+  const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,8 +85,21 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
   const [generalNote, setGeneralNote] = useState("");
 
   useEffect(() => {
-    searchRef.current?.focus();
-  }, []);
+    if (!requestId.current) requestId.current = crypto.randomUUID();
+    const previous = document.activeElement as HTMLElement | null;
+    (searchRef.current ?? dialogRef.current)?.focus();
+    const keyboard = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key !== "Tab") return;
+      const nodes = dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input,select,textarea,a[href],[tabindex="0"]');
+      if (!nodes?.length) return;
+      const first = nodes[0], last = nodes[nodes.length-1];
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", keyboard);
+    return () => { document.removeEventListener("keydown", keyboard); previous?.focus(); };
+  }, [onClose]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -86,18 +109,21 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    let active = true;
     if (!query.trim()) { setResults([]); return; }
     const t = setTimeout(async () => {
       setSearching(true);
       try {
         const data = await searchRakija(supabase, query);
-        setResults(data as Rakija[]);
+        if (active) setResults(data as Rakija[]);
+      } catch {
+        if (active) setError("Търсенето не е достъпно. Опитай отново.");
       } finally {
-        setSearching(false);
+        if (active) setSearching(false);
       }
     }, 300);
-    return () => clearTimeout(t);
-  }, [query]);
+    return () => { active = false; clearTimeout(t); };
+  }, [query, supabase]);
 
   function selectRakija(r: Rakija) {
     setSelected({ kind: "existing", id: r.id, name: r.name, producer: r.producer });
@@ -128,16 +154,17 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
         ? { rakija_id: selected!.id, score }
         : {
             score,
-            is_new_personal: true,
+            is_new_personal: true, entry_kind: entryKind, origin_claim: originClaim,
             personal_name: (selected as { name: string }).name,
             personal_producer: (selected as { producer: string }).producer,
             personal_fruit: (selected as { fruit: string }).fruit,
           };
 
-    if (!withDetails) return base;
+    const journal = { ...base, request_id: requestId.current, ...(tastedAt ? { tasted_at: new Date(tastedAt).toISOString() } : {}) };
+    if (!withDetails) return journal;
 
     return {
-      ...base,
+      ...journal, is_private: isPrivate, origin_claim: originClaim,
       aroma_tags: tags.aroma_tags.length ? tags.aroma_tags : null,
       taste_tags: tags.taste_tags.length ? tags.taste_tags : null,
       finish_tags: tags.finish_tags.length ? tags.finish_tags : null,
@@ -151,15 +178,25 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
   }
 
   async function save(withDetails: boolean) {
-    if (!selected) return;
+    if (!selected || saving) return;
     setSaving(true);
     setError(null);
 
     try {
+      if (photo && withDetails && !photoPath.current) {
+        if (!photoConsent) throw new Error("Потвърди правото за показване на снимката.");
+        if (photo.size > 5 * 1024 * 1024 || !["image/jpeg","image/png","image/webp"].includes(photo.type)) throw new Error("Избери JPG, PNG или WebP до 5 MB.");
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Влез отново в профила си.");
+        const path = `${user.id}/${requestId.current}.${photo.type.split("/")[1]}`;
+        const { error } = await supabase.storage.from("tasting-photos").upload(path, photo, {upsert:false});
+        if (error) throw new Error("Снимката не беше качена.");
+        photoPath.current = path;
+      }
       const res = await fetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildBody(withDetails)),
+        body: JSON.stringify({ ...buildBody(withDetails), ...(withDetails && photoPath.current ? { photo_path: photoPath.current, photo_display_consent: photoConsent } : {}) }),
       });
 
       if (!res.ok) {
@@ -167,7 +204,9 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
         throw new Error(j.error ?? "Грешка при запис");
       }
 
+      setSaved(true);
       window.dispatchEvent(new Event("rating-saved"));
+      await new Promise(resolve=>setTimeout(resolve,450));
       onClose();
       router.push("/feed");
     } catch (e) {
@@ -183,9 +222,11 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
 
       {/* Sheet */}
       <div
+        ref={dialogRef} role="dialog" aria-modal="true" aria-label="Нова дегустация" tabIndex={-1}
         className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-background shadow-2xl animate-slide-up flex flex-col"
         style={{ maxHeight: "90dvh" }}
       >
+        <button aria-label="Затвори" onClick={onClose} className="absolute top-3 right-5 text-xl z-10">×</button>
         {/* Handle */}
         <div className="flex-shrink-0 pt-4 px-5 pb-2">
           <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-accent/30" />
@@ -209,7 +250,7 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
                   value={query}
                   onChange={(e) => { setQuery(e.target.value); setShowNewForm(false); }}
                   placeholder="Търси напитка…"
-                  className="flex-1 bg-transparent text-sm text-oak placeholder:text-accent/60 focus:outline-none"
+                  className="flex-1 bg-transparent text-sm text-oak placeholder:text-muted focus:outline-none"
                   autoComplete="off"
                 />
               </div>
@@ -231,14 +272,14 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
                     </div>
                   </button>
                 ))}
-                {!searching && query.trim() && results.length === 0 && !showNewForm && (
+                {!searching && query.trim() && !showNewForm && (
                   <div className="py-3 text-center">
-                    <p className="text-sm text-walnut mb-2">Не е намерена в базата</p>
+                    <p className="text-sm text-walnut mb-2">Не я намираш? Добави ракия</p>
                     <button
                       onClick={() => { setShowNewForm(true); setNewName(query.trim()); }}
                       className="rounded-xl bg-cream px-4 py-2 text-sm font-semibold text-walnut"
                     >
-                      + Добави личен запис
+                      + Добави ракия
                     </button>
                   </div>
                 )}
@@ -246,7 +287,8 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
 
               {showNewForm && (
                 <div className="card mt-3 space-y-2 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-accent">Нов личен запис</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-accent">Нов запис · непроверени сведения</p>
+                  <label className="label">Вид запис<select className="input" value={entryKind} onChange={e=>setEntryKind(e.target.value)}><option value="personal">Липсващ продукт (за преглед)</option><option value="homemade">Домашна напитка (личен запис)</option></select></label>
                   <input
                     className="input text-sm"
                     placeholder="Наименование *"
@@ -269,6 +311,8 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
                     <option value="mixed">Смесена</option>
                     <option value="other">Друга</option>
                   </select>
+                  <input className="input" aria-label="Заявен произход" placeholder="Произход, ако го знаеш (непроверен)" value={originClaim} onChange={e=>setOriginClaim(e.target.value)} />
+                  <p className="text-xs text-muted">Сходните продукти са показани по-горе. Провери ги преди добавяне.</p>
                   <button
                     onClick={confirmNewEntry}
                     disabled={!newName.trim()}
@@ -300,6 +344,8 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
               </div>
 
               <RatingSlider value={score} onChange={setScore} />
+              <label className="label mt-4">Дата на дегустация<input type="datetime-local" className="input mt-2" value={tastedAt} onChange={e=>setTastedAt(e.target.value)} /></label>
+              <p className="text-xs text-muted mt-2">Всяко запазване добавя нова дегустация. Предишните впечатления остават в паспорта.</p>
 
               {error && (
                 <p className="mt-3 rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
@@ -311,7 +357,7 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
                   disabled={saving}
                   className="btn-primary py-4 text-base font-bold"
                 >
-                  {saving ? "Запазване…" : "Запази"}
+                  {saved ? "Наздраве! Запазено ✓" : saving ? "Запазване…" : "Запази"}
                 </button>
                 <button
                   onClick={() => setStep("details")}
@@ -339,14 +385,16 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
                 </div>
                 <div
                   className="flex flex-col items-center justify-center rounded-xl px-3 py-1.5"
-                  style={{ background: "linear-gradient(145deg, #D4A574, #C8882A)" }}
+                  style={{ background: "linear-gradient(145deg, #D4A574, rgb(var(--gold)))" }}
                 >
                   <span className="text-lg font-bold text-white leading-none">{score}</span>
                   <span className="text-[9px] text-white/65 leading-none">/10</span>
                 </div>
               </div>
 
+              <label className="mb-4 flex gap-2 text-sm"><input type="checkbox" checked={isPrivate} onChange={e=>setIsPrivate(e.target.checked)} />Лична дегустация</label>
               <div className="flex flex-col gap-5">
+                <section><label className="label">Снимка (по желание)<input type="file" accept="image/jpeg,image/png,image/webp" className="input mt-2" onChange={e=>{setPhoto(e.target.files?.[0]||null);photoPath.current=null;}} /></label><label className="flex gap-2 text-xs"><input type="checkbox" checked={photoConsent} onChange={e=>setPhotoConsent(e.target.checked)} />Автор съм или имам право да предоставя снимката за показване.</label><p className="text-xs text-muted mt-1">Снимката се пази в личния дневник.</p></section>
                 {SECTIONS.map((s) => (
                   <section key={s.field}>
                     <h2 className="mb-2 text-sm font-semibold text-oak">{s.label}</h2>
@@ -409,7 +457,7 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
                 disabled={saving}
                 className="btn-primary mt-6 w-full py-4 text-base font-bold"
               >
-                {saving ? "Запазване…" : "Запази"}
+                {saved ? "Наздраве! Запазено ✓" : saving ? "Запазване…" : "Запази"}
               </button>
             </>
           )}

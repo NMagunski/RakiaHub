@@ -1,0 +1,8 @@
+import Image from "next/image";
+import FruitIcon from "@/components/ui/FruitIcon";
+type Product = { name:string;fruit:string|null;image_url?:string|null;image_rights?:string|null;image_source?:string|null;image_attribution?:string|null };
+/** Original generic line illustration; no photographed label or trade dress is reproduced. */
+export default function ProductArtwork({product}:{product:Product}) {
+ if(product.image_url && product.image_rights && product.image_source) return <figure><div className="relative h-48"><Image src={product.image_url} alt={product.name} fill className="object-contain"/></div><figcaption className="text-xs text-muted">{product.image_attribution} · <a href={product.image_source} className="underline">Източник</a></figcaption></figure>;
+ return <figure className="relative flex flex-col items-center rounded-xl bg-cream/35 p-3 text-walnut"><svg viewBox="0 0 180 200" className="h-40 w-full" role="img" aria-label="Авторска скица на обща бутилка"><g fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M78 16h24v9H78zM81 25v35c0 11-25 18-27 33l-2 81q0 10 12 11h53q11-1 11-11l-2-81c-2-15-27-22-27-33V25M57 95q33 5 64 0M58 162q31 5 62 0M65 177q25 4 49 0M85 31v29M75 74q-15 11-16 20M59 103l-1 51M121 106l1 49"/><path d="M69 110l43 43m-43-28l29 29m-29-14l15 15m0-45l30 30m-15-30l15 15" opacity=".2"/><path d="M24 173q-12-16-1-27 14-9 25 4 5 12-5 24-9 7-19-1zM33 146q-2-15 11-18-1 13-11 14M33 146q-10-9-14-5"/></g></svg><div className="absolute right-2 bottom-8"><FruitIcon fruit={product.fruit} size="sm"/></div><figcaption className="text-center text-[10px] uppercase tracking-wider">Скица · {product.name}</figcaption></figure>;
+}

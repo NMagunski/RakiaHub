@@ -1,0 +1,1 @@
+export default function Loading(){return <div role="status" aria-label="Зареждане" className="space-y-4 p-4">{[1,2,3].map(n=><div key={n} className="h-32 rounded-2xl bg-cream/50 animate-pulse"/>)}</div>;}

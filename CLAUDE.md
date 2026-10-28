@@ -28,6 +28,7 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 - **18+ age verification** — checkbox at registration, `age_verified_at` timestamp written to profiles table on signup
 - **Terms & Conditions** — static page at `/terms` (public, no auth), accepted via checkbox at registration, linked from Settings tab
 - **Production deployment** — live at `https://rakia-hub.vercel.app` on Vercel
+- **Wishlist "Искам да пробвам"** — bookmark ракия за по-късно; бутон на detail страница, dedicated `/wishlist` page + BottomNav таб, "Списък" таб в Profile; auto-remove при оценяване (S2 done)
 
 ### 🔴 Pending — next session pick-up point
 
@@ -43,9 +44,8 @@ Stack: Next.js 14 App Router · Supabase (Postgres + Auth + Realtime + Storage) 
 
 | # | Feature | Size | Status |
 |---|---|---|---|
-| M5 | Детайлни статистики | M | pending |
-| S2 | Wishlist "Искам да пробвам" | S | pending |
 | S1 | Share ракия/оценка | S | pending |
+| M5 | Детайлни статистики | M | pending |
 | M1 | Коментари на оценки | M | pending |
 | M7 | "Подобни ракии" препоръки | M | pending |
 | L1 | Venue Check-in + Местен Feed | L | pending |
@@ -178,6 +178,15 @@ CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.la
 - **Потребители** (`/admin/users`): user list, toggle admin role, delete user (inline confirm; admin cannot delete own account; uses `DELETE /api/admin/users` → cascade)
 - **Промоции** (`/admin/promotions`): personal rakiyas suggested for commercial promotion; filter by status; approve (sets `type=commercial`, `is_verified=true`) or reject
 
+### Wishlist (`/wishlist`)
+- Server Component, `force-dynamic` — fetches user's wishlist from Supabase on each request
+- Listed in BottomNav as 5th tab (bookmark icon, label "Списък")
+- Each item links to `/rakija/[id]` detail page
+- Empty state with link to Discover
+- Also accessible as "Списък" tab in `/profile`
+- **WishlistButton** (`src/components/rakija/WishlistButton.tsx`): Client Component on rakija detail page; optimistic toggle + `router.refresh()` after success to invalidate Next.js router cache (prevents stale state on revisit)
+- Auto-remove from wishlist when user rates a rakija (handled in `POST /api/ratings`)
+
 ### Terms & Conditions (`/terms`)
 - Static Server Component, no auth required (`ALWAYS_PATHS`)
 - Bulgarian placeholder text — 7 sections: въведение, достъп/възраст, потребителско съдържание, отговорност, акаунти, промени, контакт
@@ -200,6 +209,7 @@ CSS classes: `.card`, `.card-xl`, `.glass-panel`, `.input`, `.btn-primary`, `.la
 | Table | Key Fields |
 |---|---|
 | `profiles` | `id`, `username`, `display_name`, `avatar_url`, `is_admin`, `created_at`, `age_verified_at` |
+| `wishlists` | `id`, `user_id`, `rakija_id`, `created_at` — UNIQUE(user_id, rakija_id) |
 | `rakija` | `id`, `name`, `producer`, `fruit`, `type` (commercial/personal/homemade), `region`, `country`, `abv`, `vintage_year`, `description`, `is_verified`, `global_rating`, `rating_count`, `added_by` |
 | `ratings` | `id`, `user_id`, `rakija_id`, `score`, `aroma/taste/finish/color_tags`, `*_note`, `venue_name`, `venue_place_id`, `notes`, `is_private`, `created_at` |
 | `friendships` | `id`, `requester_id`, `addressee_id`, `status` (pending/accepted/declined) |
@@ -217,8 +227,9 @@ Rating tags — Aroma (9), Taste (8), Finish (7), Color (5)
 
 | Method | Route | Description |
 |---|---|---|
-| POST | `/api/ratings` | Create/update rating; upsert logic: finds existing `(user_id, rakija_id)` → UPDATE, else INSERT |
+| POST | `/api/ratings` | Create/update rating; upsert logic; also auto-deletes wishlist entry for that rakija |
 | DELETE | `/api/ratings` | Delete own rating (checks `user_id` ownership) |
+| POST | `/api/wishlist` | Toggle wishlist (add if not exists, remove if exists); returns `{ added: boolean }` |
 | PATCH | `/api/account` | Update own email via admin client (bypasses OTP); signs user out client-side after |
 | DELETE | `/api/account` | Cascade-delete own account + auth record |
 | DELETE | `/api/admin/users` | Admin: cascade-delete any user (guards: must be admin, cannot self-delete) |
@@ -268,7 +279,8 @@ src/
 │   │   ├── users/            # User management
 │   │   └── promotions/       # Promotion queue
 │   ├── api/
-│   │   ├── ratings/route.ts  # POST (upsert) + DELETE
+│   │   ├── ratings/route.ts  # POST (upsert + auto wishlist cleanup) + DELETE
+│   │   ├── wishlist/route.ts # POST toggle (add/remove)
 │   │   ├── account/route.ts  # PATCH (email update) + DELETE (self-delete)
 │   │   ├── admin/users/route.ts # DELETE (admin user delete)
 │   │   ├── friends/route.ts  # Friend actions
@@ -277,6 +289,7 @@ src/
 │   ├── invite/[token]/       # Invite acceptance page
 │   ├── rakija/[id]/          # Rakija detail (Server Component)
 │   ├── rate/[id]/details/    # Rating details form
+│   ├── wishlist/page.tsx     # Wishlist page (BottomNav tab, Server Component)
 │   ├── terms/page.tsx        # T&C static page (public, no auth)
 │   ├── auth/reset-password/  # Password reset (client-side PKCE exchange)
 │   ├── auth/callback/        # Auth callback route handler
@@ -284,7 +297,7 @@ src/
 ├── components/
 │   ├── layout/               # AppHeader, BottomNav, RatingFAB
 │   ├── feed/                 # RatingCard, NazdraveButton
-│   ├── rakija/               # RakijaCard, RateButton, BackButton
+│   ├── rakija/               # RakijaCard, RateButton, BackButton, WishlistButton
 │   ├── rating/               # RatingBottomSheet, RatingSlider
 │   ├── admin/                # RakijaForm
 │   └── ui/                   # FruitIcon
@@ -307,6 +320,24 @@ public/
 ├── sw.js
 └── icons/                    # PWA icons
 ```
+
+---
+
+## Git Workflow
+
+- **`main`** — production branch; auto-deploys to Vercel on push
+- **`staging`** — active development branch; all new work goes here
+- Flow: commit to `staging` → test locally → merge to `main` → Vercel deploys to prod
+
+```bash
+# Merge staging → prod
+git checkout main
+git merge staging
+git push
+git checkout staging   # return to dev branch
+```
+
+All new features and fixes must be committed to `staging`. Never commit directly to `main`.
 
 ---
 

@@ -1,0 +1,93 @@
+[
+  {
+    "id": "geonames:726320",
+    "country_id": "BG",
+    "name": "Троян",
+    "latitude": 42.89427,
+    "longitude": 24.71589
+  },
+  {
+    "id": "geonames:726464",
+    "country_id": "BG",
+    "name": "Тетевен",
+    "latitude": 42.91667,
+    "longitude": 24.26667
+  },
+  {
+    "id": "geonames:726629",
+    "country_id": "BG",
+    "name": "Сунгурларе",
+    "latitude": 42.76667,
+    "longitude": 26.78333
+  },
+  {
+    "id": "geonames:727221",
+    "country_id": "BG",
+    "name": "Силистра",
+    "latitude": 44.1171,
+    "longitude": 27.26056
+  },
+  {
+    "id": "geonames:727447",
+    "country_id": "BG",
+    "name": "Сандански",
+    "latitude": 41.56667,
+    "longitude": 23.28333
+  },
+  {
+    "id": "geonames:728108",
+    "country_id": "BG",
+    "name": "Поморие",
+    "latitude": 42.56326,
+    "longitude": 27.62986
+  },
+  {
+    "id": "geonames:730559",
+    "country_id": "BG",
+    "name": "Карнобат",
+    "latitude": 42.65,
+    "longitude": 26.98333
+  },
+  {
+    "id": "geonames:789107",
+    "country_id": "RS",
+    "name": "Кралево",
+    "latitude": 43.72583,
+    "longitude": 20.68944
+  },
+  {
+    "id": "geonames:789128",
+    "country_id": "RS",
+    "name": "Крагуевац",
+    "latitude": 44.01667,
+    "longitude": 20.91667
+  },
+  {
+    "id": "geonames:3188402",
+    "country_id": "RS",
+    "name": "Валево",
+    "latitude": 44.27513,
+    "longitude": 19.89821
+  },
+  {
+    "id": "geonames:785842",
+    "country_id": "MK",
+    "name": "Скопие",
+    "latitude": 41.99646,
+    "longitude": 21.43141
+  },
+  {
+    "id": "geonames:787716",
+    "country_id": "MK",
+    "name": "Неготино",
+    "latitude": 41.48456,
+    "longitude": 22.09056
+  },
+  {
+    "id": "geonames:789541",
+    "country_id": "MK",
+    "name": "Кавадарци",
+    "latitude": 41.43344,
+    "longitude": 22.01218
+  }
+]

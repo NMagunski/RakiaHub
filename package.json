@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:db": "node tests/database.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test": "node tests/database.mjs && node tests/passport.mjs && node tests/service-worker.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
@@ -16,6 +19,8 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.13",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

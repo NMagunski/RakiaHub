@@ -86,12 +86,12 @@ export default function RegisterPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-walnut shadow-md">
             <svg viewBox="0 0 24 24" fill="none" className="h-8 w-8" aria-hidden>
               <path d="M9 3h6M10 3v2.5c0 .5-.5 1-1 1.5L7 9v11a1 1 0 001 1h8a1 1 0 001-1V9l-2-2c-.5-.5-1-1-1-1.5V3"
-                stroke="#EDD9C0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M7 14h10" stroke="#EDD9C0" strokeWidth="1.6" strokeLinecap="round" />
+                stroke="rgb(var(--cream))" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M7 14h10" stroke="rgb(var(--cream))" strokeWidth="1.6" strokeLinecap="round" />
             </svg>
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-oak">RakiaHub</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-oak">RAKIQ</h1>
             <p className="mt-1 text-sm text-walnut">Създай профил</p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function RegisterPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
-                className="flex-1 bg-transparent text-oak placeholder:text-accent/60 focus:outline-none"
+                className="flex-1 bg-transparent text-oak placeholder:text-muted focus:outline-none"
                 placeholder="rakiq_fan"
               />
             </div>

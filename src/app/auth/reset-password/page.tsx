@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
   return (
     <main
       className="flex min-h-screen flex-col items-center justify-center px-6"
-      style={{ background: "linear-gradient(175deg, #F5EAD5 0%, #FBF5EC 100%)" }}
+      style={{ background: "linear-gradient(175deg, #F5EAD5 0%, rgb(var(--background)) 100%)" }}
     >
       <div className="w-full max-w-sm rounded-3xl p-8" style={{ background: "#FFFFFF", boxShadow: "0 4px 40px rgba(44,24,16,0.10)" }}>
         {done ? (
@@ -123,7 +123,7 @@ export default function ResetPasswordPage() {
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5"
-                  style={{ color: "#8A7968" }}
+                  style={{ color: "rgb(var(--muted))" }}
                   aria-label={showPw ? "Скрий" : "Покажи"}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">

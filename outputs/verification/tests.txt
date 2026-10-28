@@ -1,0 +1,18 @@
+
+> rakiq@0.1.0 test
+> node tests/database.mjs && node tests/passport.mjs && node tests/service-worker.mjs
+
+PASS: fresh migrations, repeated upgrade, existing journal IDs and reactions preserved
+PASS: profile escalation and product tampering rejected
+PASS: journal, idempotent retry, one vote per user
+PASS: private journal and guest contract
+PASS: edit/delete recompute current rating
+PASS: Cyrillic, transliteration and special characters
+PASS: exact normalized duplicate re-used and own draft service fields protected
+PASS: atomic commercial approval does not assert verification
+PASS: admin merge retains journal IDs
+PASS: atomic wishlist toggle
+PASS: photo ownership enforced
+PASS: quoted CSV import is repeatable, logged and remains pending
+PASS: unique products, verified regions, country-only origin, venue independence, latest tasting and empty passport
+PASS: offline HTML only for navigation, API and RSC bypassed

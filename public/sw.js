@@ -1,4 +1,4 @@
-const CACHE_NAME = "rakiq-v2";
+const CACHE_NAME = "rakiq-v3";
 const OFFLINE_URL = "/offline";
 
 const STATIC_ASSETS = [
@@ -51,7 +51,9 @@ self.addEventListener("fetch", (event) => {
   // Skip cross-origin requests
   if (url.origin !== self.location.origin) return;
 
-  // Network-first for pages and API — fall back to offline page
+  if (event.request.mode !== "navigate") return;
+
+  // Only document navigations may receive the offline HTML.
   event.respondWith(
     fetch(event.request).catch(() =>
       caches.match(event.request).then((cached) => cached ?? caches.match(OFFLINE_URL))
