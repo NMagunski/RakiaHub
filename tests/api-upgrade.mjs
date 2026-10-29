@@ -1,0 +1,22 @@
+// Integration checks against the isolated local fixture; never production.
+import assert from 'node:assert/strict';
+import {createServerClient} from '@supabase/ssr';
+const base='http://localhost:3100',fixture='http://127.0.0.1:54321';
+await fetch(fixture+'/__reset',{method:'POST'});
+const jar=new Map();
+const client=createServerClient(fixture,'local-fixture-key',{cookies:{getAll:()=>[...jar].map(([name,value])=>({name,value})),setAll:values=>values.forEach(({name,value})=>jar.set(name,value))}});
+const {error}=await client.auth.signInWithPassword({email:'qa@example.test',password:'test-password'});
+assert.equal(error,null);
+const headers={Cookie:[...jar].map(([name,value])=>`${name}=${value}`).join('; '),'Content-Type':'application/json'};
+const passport=async()=>{const r=await fetch(base+'/api/passport',{headers});assert.equal(r.status,200);assert.match(r.headers.get('cache-control'),/no-store/);return r.json();};
+const before=await passport();
+assert.equal(before.tastings.length,1);assert.equal(before.wishlist.length,1);
+const payload={rakija_id:before.tastings[0].rakija_id,score:9,request_id:crypto.randomUUID()};
+const save=async()=>{const r=await fetch(base+'/api/ratings',{method:'POST',headers,body:JSON.stringify(payload)});assert.equal(r.status,200);return r.json();};
+const first=await save(),retry=await save();assert.equal(first.id,retry.id);
+const after=await passport();assert.equal(after.tastings.length,2);assert.equal(after.wishlist.length,0);
+assert.deepEqual(after.tastings.find(t=>t.id===before.tastings[0].id),before.tastings[0]);
+const invalid=await fetch(base+'/api/ratings',{method:'POST',headers,body:JSON.stringify({...payload,score:11})});assert.equal(invalid.status,400);
+const guest=await fetch(base+'/api/passport');assert.equal(guest.status,401);assert.match(guest.headers.get('content-type'),/application\/json/);
+console.log('PASS: authenticated passport joins wishlist; quick save, duplicate retry, original history, invalid score and guest JSON contract');
+await fetch(fixture+'/__reset',{method:'POST'});

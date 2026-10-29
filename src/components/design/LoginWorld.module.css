@@ -1,0 +1,109 @@
+.world {
+  --login-paper: 251 246 235;
+  --login-ink: 58 30 17;
+  --login-button: 177 72 12;
+  --login-button-end: 135 49 10;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: none;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0 0 90px;
+  background: rgb(var(--login-paper));
+  color: rgb(var(--login-ink));
+}
+:global([data-theme="atlas"]) .world {
+  --login-paper: 247 248 239;
+  --login-ink: 15 47 29;
+  --login-button: 32 76 43;
+  --login-button-end: 18 50 30;
+}
+.topbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px clamp(22px, 4vw, 80px);
+}
+.topbar :global(.wordmark) { color: rgb(var(--login-ink)); font-size: 32px; }
+.topbar :global(.login-theme-choice) { background: rgb(var(--login-paper) / .9); }
+.center { position: relative; z-index: 2; width: min(410px, calc(100% - 40px)); margin: clamp(30px, 6vh, 72px) auto 0; }
+.intro { text-align: center; margin-bottom: 26px; animation: arrive .8s ease-out both; }
+.intro :global(.login-kicker) { font-size: 9px; letter-spacing: .23em; margin-bottom: 15px; }
+.intro h1 { font: 500 clamp(38px, 4.2vw, 62px)/1.08 var(--font-editorial), Georgia, serif; letter-spacing: -.045em; width: max-content; max-width: min(90vw, 700px); position: relative; left: 50%; translate: -50% 0; margin: 0 0 12px; }
+.intro p:last-child { font: 400 17px/1.5 var(--font-editorial), Georgia, serif; }
+.panel { padding: 27px 30px; border: 1px solid rgb(var(--login-ink) / .16); background: rgb(var(--login-paper) / .985); border-radius: 12px; box-shadow: 0 16px 55px rgb(var(--login-ink) / .09), 0 2px 6px rgb(var(--login-ink) / .04); animation: arrive .95s ease-out both; }
+.panel :global(.input) { background: rgb(var(--login-paper)); border-color: rgb(var(--login-ink) / .22); border-radius: 8px; box-shadow: inset 0 1px 3px rgb(var(--login-ink) / .025); }
+.panel :global(.btn-primary) { background: linear-gradient(110deg, rgb(var(--login-button)), rgb(var(--login-button-end))); border-radius: 8px; color: #fffaf0; box-shadow: 0 3px 9px rgb(var(--login-button) / .14); transition: transform .12s ease, box-shadow .12s ease; }
+.panel :global(.btn-primary):active { transform: scale(.98); box-shadow: 0 1px 3px rgb(var(--login-button) / .18); }
+.panel :global(.btn-primary):disabled { cursor: wait; opacity: .75; }
+.world :focus-visible { outline: 2px solid rgb(var(--login-button)); outline-offset: 4px; }
+.scenery { --pointer-x: 0px; --pointer-y: 0px; position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: clip; }
+.landscape { object-fit: cover; object-position: center; }
+.centralHaze { position: absolute; inset: 0; background: radial-gradient(ellipse 31% 67% at 50% 39%, rgb(var(--login-paper) / .96) 0%, rgb(var(--login-paper) / .8) 48%, transparent 100%); }
+.object { position: absolute; transform: translate3d(var(--pointer-x), var(--pointer-y), 0); transition: transform .5s ease-out; }
+.cutout { object-fit: contain; }
+.bottle { width: clamp(270px, 25vw, 430px); height: clamp(360px, 34vw, 580px); bottom: 3%; left: clamp(8px, 3vw, 70px); }
+.journal { width: clamp(300px, 27vw, 460px); height: clamp(230px, 21vw, 350px); bottom: 2%; right: clamp(8px, 3vw, 70px); }
+.branchPosition { position: absolute; width: clamp(200px, 24vw, 400px); height: clamp(180px, 23vw, 370px); transform: translate3d(calc(var(--pointer-x) * -1), calc(var(--pointer-y) * -1), 0); transition: transform .7s ease-out; }
+.branchLeft { left: -55px; top: 3%; rotate: 24deg; }
+.branchRight { right: -55px; top: 15%; rotate: 195deg; width: clamp(160px, 19vw, 320px); }
+.sway { position: absolute; inset: 0; transform-origin: 20% 85%; animation: sway 9s ease-in-out infinite alternate; }
+.branchRight .sway { animation-duration: 11s; animation-delay: -4s; }
+.mist { position: absolute; inset: 0; overflow: clip; }
+.mist span { position: absolute; width: 66%; height: 17%; left: -12%; top: 47%; border-radius: 50%; background: radial-gradient(ellipse, rgb(var(--login-paper) / .62), rgb(var(--login-paper) / .2) 45%, transparent 72%); animation: mistDrift 22s ease-in-out infinite alternate; }
+.mist span:last-child { top: 65%; left: 53%; width: 65%; height: 20%; opacity: .65; animation-duration: 27s; animation-delay: -12s; }
+.cartography { position: absolute; right: 7%; top: 13%; width: clamp(170px, 22vw, 350px); stroke: rgb(var(--login-ink)); stroke-width: .8; opacity: .06; }
+:global([data-theme="atlas"]) .cartography { opacity: .23; }
+:global([data-theme="atlas"]) .landscape { filter: saturate(.75); }
+@keyframes arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sway { from { transform: rotate(-1.5deg); } to { transform: rotate(1.8deg); } }
+@keyframes mistDrift { from { transform: translate3d(-4%, 0, 0); opacity: .55; } to { transform: translate3d(13%, -7%, 0); opacity: .95; } }
+@media (min-width: 1700px) { .center { margin-top: 7vh; } .bottle { left: 6%; } .journal { right: 6%; bottom: 5%; } }
+@media (max-width: 1000px) {
+  .world { padding-bottom: 370px; }
+  .center { margin-top: 40px; }
+  .bottle { width: 260px; height: 350px; left: -45px; bottom: 0; }
+  .journal { width: 290px; height: 230px; right: -45px; bottom: 0; }
+  .branchLeft { left: -70px; top: 7%; width: 220px; }
+  .branchRight { right: -85px; width: 210px; top: 32%; }
+  .centralHaze { background: radial-gradient(ellipse 65% 65% at 50% 38%, rgb(var(--login-paper) / .96), rgb(var(--login-paper) / .75) 55%, transparent); }
+  .cartography { right: -50px; top: 20%; }
+}
+@media (max-width: 600px) {
+  .world { padding-bottom: 250px; }
+  .topbar { padding: 20px 18px; gap: 10px; }
+  .topbar :global(.wordmark) { font-size: 24px; }
+  .topbar :global(.login-theme-choice button) { font-size: 9px; padding: 8px 7px; gap: 5px; }
+  .center { margin-top: 28px; width: calc(100% - 36px); }
+  .intro { margin-bottom: 23px; }
+  .intro h1 { width: auto; max-width: none; left: auto; translate: none; font-size: 42px; }
+  .intro :global(.login-kicker) { font-size: 8px; letter-spacing: .16em; }
+  .intro p:last-child { font-size: 16px; }
+  .panel { padding: 24px; }
+  .bottle { width: 175px; height: 230px; left: -24px; bottom: -8px; }
+  .journal { width: 195px; height: 155px; right: -25px; bottom: 5px; }
+  .branchLeft { width: 145px; height: 190px; top: 2%; left: -110px; opacity: .8; }
+  .branchRight { width: 150px; height: 170px; top: 31%; right: -85px; opacity: .6; }
+  .cartography { width: 150px; right: -85px; top: 5%; }
+  .mist span { top: 76%; width: 90%; }
+  .mist span:last-child { top: 86%; left: 35%; }
+  .centralHaze { background: linear-gradient(180deg, rgb(var(--login-paper) / .65), rgb(var(--login-paper) / .9) 25%, rgb(var(--login-paper) / .75) 68%, transparent 95%); }
+}
+@media (max-height: 700px) and (min-width: 1001px) {
+  .world { padding-bottom: 60px; }
+  .topbar { padding-block: 18px; }
+  .center { margin-top: 10px; }
+  .intro { margin-bottom: 18px; }
+  .intro h1 { font-size: 45px; }
+  .bottle { height: 330px; width: 250px; }
+  .journal { height: 210px; width: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .world *, .world *::before, .world *::after { animation: none !important; transition: none !important; }
+  .object, .branchPosition { transform: none !important; }
+}
+@media (hover: none), (pointer: coarse) { .object, .branchPosition { transform: none; transition: none; } }

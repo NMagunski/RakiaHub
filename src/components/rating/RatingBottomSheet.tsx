@@ -1,6 +1,8 @@
 "use client";
+import { TAG_LABELS } from "@/lib/tasting-labels";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { searchRakija } from "@/lib/queries/rakija";
@@ -19,6 +21,7 @@ type Props = {
   onClose: () => void;
   preselected?: { kind: "existing"; id: string; name: string; producer: string | null };
   initialQuery?: string;
+  initialScore?: number;
 };
 
 type TagSection = {
@@ -28,14 +31,7 @@ type TagSection = {
   noteField: "aroma_note" | "taste_note" | "finish_note" | null;
 };
 
-const TAG_LABELS: Record<string, string> = {
-  fruity: "Плодово", plum: "Слива", apricot: "Кайсия", oaky: "Дъбово",
-  floral: "Цветно", spirity: "Спиртово", earthy: "Земно", honey: "Мед", vanilla: "Ванилия",
-  sweet: "Сладко", dry: "Сухо", smooth: "Мек", sharp: "Остър",
-  balanced: "Балансиран", buttery: "Масленост", spicy: "Пикантно", bitter: "Горчиво",
-  short: "Кратък", long: "Дълъг", warm: "Топъл",
-  clear: "Бистра", golden: "Златиста", amber: "Кехлибарена", cloudy: "Мътна", dark: "Тъмна",
-};
+
 
 const SECTIONS: TagSection[] = [
   { label: "Аромат", field: "aroma_tags", tags: AROMA_TAGS, noteField: "aroma_note" },
@@ -44,7 +40,7 @@ const SECTIONS: TagSection[] = [
   { label: "Цвят / яснота", field: "color_tags", tags: COLOR_TAGS, noteField: null },
 ];
 
-export default function RatingBottomSheet({ onClose, preselected, initialQuery = "" }: Props) {
+export default function RatingBottomSheet({ onClose, preselected, initialQuery = "", initialScore = 7 }: Props) {
   const router = useRouter();
   const supabase = createClient();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -63,7 +59,7 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
   const [results, setResults] = useState<Rakija[]>([]);
   const [searching, setSearching] = useState(false);
   const [selected, setSelected] = useState<SelectedRakija | null>(preselected ?? null);
-  const [score, setScore] = useState(7.0);
+  const [score, setScore] = useState(initialScore);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +211,9 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
     }
   }
 
-  return (
+  // Product panels have their own stacking context. Mount the dialog at the
+  // document root so its backdrop and controls also cover the fixed navigation.
+  return createPortal(
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 z-40 bg-black/40" onClick={onClose} />
@@ -223,7 +221,7 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
       {/* Sheet */}
       <div
         ref={dialogRef} role="dialog" aria-modal="true" aria-label="Нова дегустация" tabIndex={-1}
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-background shadow-2xl animate-slide-up flex flex-col"
+        className="rating-dialog fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl bg-background shadow-2xl animate-slide-up flex flex-col"
         style={{ maxHeight: "90dvh" }}
       >
         <button aria-label="Затвори" onClick={onClose} className="absolute top-3 right-5 text-xl z-10">×</button>
@@ -464,6 +462,6 @@ export default function RatingBottomSheet({ onClose, preselected, initialQuery =
 
         </div>
       </div>
-    </>
+    </>, document.body
   );
 }

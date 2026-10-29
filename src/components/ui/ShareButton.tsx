@@ -12,8 +12,10 @@ type Props = {
 
 export default function ShareButton({ title, text, url, className, style }: Props) {
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState(false);
 
   async function handleShare() {
+    setError(false);
     if (navigator.share) {
       try {
         await navigator.share({ title, text, url });
@@ -23,7 +25,8 @@ export default function ShareButton({ title, text, url, className, style }: Prop
       return;
     }
     // Fallback: copy link to clipboard
-    await navigator.clipboard.writeText(url);
+    try { await navigator.clipboard.writeText(new URL(url, window.location.origin).href); }
+    catch { setError(true); return; }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -32,7 +35,8 @@ export default function ShareButton({ title, text, url, className, style }: Prop
     <button
       style={style}
       onClick={handleShare}
-      aria-label="Сподели"
+      aria-label={error ? "Копирането не успя. Опитай отново" : copied ? "Линкът е копиран" : "Сподели"}
+      title={error ? "Копирането не успя. Опитай отново" : copied ? "Линкът е копиран" : "Сподели"}
       className={className}
     >
       {copied ? (

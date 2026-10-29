@@ -19,12 +19,12 @@ export type FeedRating = {
   notes: string | null;
   is_private: boolean;
   created_at: string;
-  rakija: { id: string; name: string; producer: string | null; fruit: string | null; type: string } | null;
+  rakija: { id: string; name: string; producer: string | null; fruit: string | null; type: string; country: string | null; region: string | null; image_url: string | null; image_source: string | null; image_rights: string | null; image_attribution: string | null } | null;
   profiles: { id: string; username: string; avatar_url: string | null } | null;
 };
 
-export async function getFeed(client: Client): Promise<FeedRating[]> {
-  const { data, error } = await client
+export async function getFeed(client: Client, scope: "friends" | "mine" = "friends", userId?: string): Promise<FeedRating[]> {
+  let query = client
     .from("ratings")
     .select(`
       id,
@@ -40,11 +40,13 @@ export async function getFeed(client: Client): Promise<FeedRating[]> {
       notes,
       is_private,
       created_at,
-      rakija:rakija_id ( id, name, producer, fruit, type ),
+      rakija:rakija_id ( id, name, producer, fruit, type, country, region, image_url, image_source, image_rights, image_attribution ),
       profiles:user_id ( id, username, avatar_url )
     `)
     .order("created_at", { ascending: false })
     .limit(50);
+  if (userId) query = scope === "mine" ? query.eq("user_id", userId) : query.neq("user_id", userId);
+  const { data, error } = await query;
 
   if (error) throw error;
   return (data ?? []) as unknown as FeedRating[];
@@ -56,11 +58,12 @@ export async function getReactionCounts(
 ): Promise<Record<string, { count: number; user_reacted: boolean; reactors: Reactor[] }>> {
   if (!ratingIds.length) return {};
 
-  const { data } = await client
+  const { data, error } = await client
     .from("reactions")
     .select("rating_id, user_id, profiles:user_id(username, avatar_url)")
     .in("rating_id", ratingIds);
 
+  if (error) throw error;
   const { data: { user } } = await client.auth.getUser();
   const uid = user?.id;
 

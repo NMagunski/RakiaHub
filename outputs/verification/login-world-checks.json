@@ -1,0 +1,43 @@
+{
+  "viewports": [
+    [
+      390,
+      844
+    ],
+    [
+      768,
+      1024
+    ],
+    [
+      1440,
+      900
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "themes": [
+    "amber",
+    "atlas"
+  ],
+  "screenshot_dpr": 2,
+  "low_viewport": [
+    390,
+    420
+  ],
+  "motion_capture_seconds": 13.386,
+  "normal_changed_pixels": 27266,
+  "reduced_motion_changed_pixels": 0,
+  "pointer_movement_bottle_changed_pixels": 7168,
+  "pointer_movement_form_changed_pixels": 0,
+  "login_invalid": "passed with local fixture",
+  "recovery_confirmation": "passed with local fixture",
+  "keyboard_login": "passed; redirects to /discover",
+  "physical_mobile_keyboard": "not tested",
+  "safari": "not tested",
+  "typescript": "passed",
+  "production_build": "passed",
+  "lint": "passed with pre-existing passport ref cleanup warning",
+  "production_database_changed": false
+}

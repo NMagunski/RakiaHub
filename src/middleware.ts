@@ -1,8 +1,9 @@
+import { safeReturnPath } from "@/lib/auth/redirect";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register"];
-const ALWAYS_PATHS = ["/auth/reset-password", "/auth/callback", "/terms", "/offline", "/invite", "/u"]; // accessible regardless of auth state
+const ALWAYS_PATHS = ["/auth/reset-password", "/auth/callback", "/terms", "/offline", "/invite", "/u", "/api/auth/username"]; // accessible regardless of auth state
 const ADMIN_PATHS = ["/admin"];
 
 export async function middleware(request: NextRequest) {
@@ -43,11 +44,13 @@ export async function middleware(request: NextRequest) {
   if (!user && pathname.startsWith("/api/")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (!user && !isPublic) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const login = new URL("/login", request.url);
+    login.searchParams.set("next", pathname + request.nextUrl.search);
+    return NextResponse.redirect(login);
   }
 
   if (user && isPublic) {
-    return NextResponse.redirect(new URL("/feed", request.url));
+    return NextResponse.redirect(new URL(safeReturnPath(request.nextUrl.searchParams.get("next")), request.url));
   }
 
   if (isAdmin && user) {
@@ -58,7 +61,7 @@ export async function middleware(request: NextRequest) {
       .single();
 
     if (!profile?.is_admin) {
-      return NextResponse.redirect(new URL("/feed", request.url));
+      return NextResponse.redirect(new URL("/discover", request.url));
     }
   }
 

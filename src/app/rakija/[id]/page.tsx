@@ -8,6 +8,8 @@ import ProductArtwork from "@/components/rakija/ProductArtwork";
 import BackButton from "@/components/rakija/BackButton";
 import RateButton from "@/components/rakija/RateButton";
 import WishlistButton from "@/components/rakija/WishlistButton";
+import Link from "next/link";
+import BottomNav from "@/components/layout/BottomNav";
 import ShareButton from "@/components/ui/ShareButton";
 
 const FRUIT_BG: Record<string, string> = {
@@ -79,74 +81,20 @@ export default async function RakijaPage({ params }: { params: { id: string } })
   ];
 
   return (
-    <div className="px-4 pt-4 pb-8 max-w-3xl mx-auto">
-      {/* Nav */}
-      <div className="mb-5">
-        <BackButton />
+    <div className="product-page">
+      <div className="product-hero">
+        <ProductArtwork product={rakija} sizes="(max-width:760px) 100vw, 760px" priority />
+        <div className="product-hero-nav"><BackButton /><ShareButton title={rakija.name} text={rakija.producer ? `${rakija.producer} · RAKIQ` : "RAKIQ"} url={`https://rakia-hub.vercel.app/rakija/${rakija.id}`} className="product-share" /></div>
       </div>
-
-      {/* Header */}
-      <div className="mb-6 flex items-start gap-4">
-        <div className="w-28 shrink-0"><ProductArtwork product={rakija} /></div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-serif text-xl font-bold text-oak">{rakija.name}</h1>
-            {rakija.is_verified && (
-              <span className="rounded-full bg-verified/10 px-2 py-0.5 text-xs font-medium text-verified">
-                Верифицирана
-              </span>
-            )}
-          </div>
-          {rakija.producer && (
-            <p className="text-sm text-walnut">{rakija.producer}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Rating badge */}
-      {rakija.global_rating ? (
-        <div className="card mb-6 flex items-center gap-4 px-5 py-4">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-gold">{rakija.global_rating}</p>
-            <p className="text-xs text-accent">от 10</p>
-          </div>
-          <div className="h-10 w-px bg-accent/20" />
-          <div>
-            <p className="font-medium text-oak">{rakija.rating_count} оценки</p>
-            <p className="text-sm text-walnut">глобален рейтинг</p>
-          </div>
-        </div>
-      ) : (
-        <div className="card mb-6 px-5 py-4 text-center">
-          <p className="text-2xl mb-2">🥃</p>
-          <p className="font-medium text-oak">Бъди първия!</p>
-          <p className="text-sm text-walnut mt-1">Все още няма оценки за тази ракия.</p>
-        </div>
-      )}
-
-      {/* Rate button */}
-      <div className="mb-3">
-        <RateButton
-          rakijaId={rakija.id}
-          rakijaName={rakija.name}
-          rakijaProducer={rakija.producer}
-        />
-      </div>
-
-      {/* Wishlist + Share row */}
-      <div className="mb-6 flex gap-2">
-        <div className="flex-1">
-          <WishlistButton rakijaId={rakija.id} initialState={isWishlisted} />
-        </div>
-        <ShareButton
-          title={rakija.name}
-          text={rakija.producer ? `${rakija.producer} · RAKIQ` : "RAKIQ"}
-          url={`https://rakia-hub.vercel.app/rakija/${rakija.id}`}
-          className="flex items-center justify-center rounded-2xl border px-4 transition-colors"
-          style={{ borderColor: "rgba(107,68,35,0.25)", color: "rgb(var(--walnut))" } as React.CSSProperties}
-        />
-      </div>
-
+      <section className="product-panel">
+        <div className="product-panel-handle" aria-hidden="true" />
+        <p className="eyebrow">{FRUIT_BG[rakija.fruit || ""] || 'Откритие'} · {rakija.abv ? `${rakija.abv}% vol.` : 'RAKIQ'}</p>
+        <h1>{rakija.name}</h1>
+        <p className="product-origin">{[rakija.region, ({BG:'България',RS:'Сърбия',MK:'Северна Македония'} as Record<string,string>)[rakija.country_id || ''] || rakija.country].filter(Boolean).join(' · ')}</p>
+        {rakija.producer && <p className="product-producer">{rakija.producer}{rakija.is_verified && <span> · Проверен продукт ✓</span>}</p>}
+        <div className="product-rating-summary"><span className="product-star" aria-hidden="true">★</span><div><strong>{rakija.global_rating ? Number(rakija.global_rating).toFixed(1) : '—'}</strong><span> /10</span><p>Обща оценка</p></div><div className="product-rating-count"><span>{rakija.rating_count} {rakija.rating_count===1?"оценка":"оценки"}</span><Link href="/passport">Моят дневник →</Link></div></div>
+        <RateButton rakijaId={rakija.id} rakijaName={rakija.name} rakijaProducer={rakija.producer} initialScore={myRating?.score} />
+        <div className="product-wishlist"><WishlistButton rakijaId={rakija.id} initialState={isWishlisted} /></div>
       {/* My rating details */}
       {myRating && (
         <div className="mb-6 space-y-3">
@@ -218,12 +166,13 @@ export default async function RakijaPage({ params }: { params: { id: string } })
         </div>
       )}
 
+      {rakija.image_url && rakija.image_source && rakija.image_rights && <p className="product-image-credit">{rakija.image_attribution} · <a href={rakija.image_source} target="_blank" rel="noreferrer">Източник на снимката ↗</a> · {rakija.image_rights}</p>}
       {/* Rakija details */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-accent">Детайли</h2>
         <div className="card divide-y divide-accent/10">
           <Row label="Категория" value={SPIRIT_CATEGORIES[rakija.category || "rakija"] || rakija.category} />
-          {rakija.fruit && <Row label="Вид" value={FRUIT_BG[rakija.fruit] ?? rakija.fruit} />}
+          {rakija.fruit && <Row label="Вид" value={FRUIT_BG[rakija.fruit || ""] ?? rakija.fruit} />}
           {rakija.region && <Row label="Регион" value={rakija.region} />}
           {rakija.country && <Row label="Страна" value={rakija.country} />}
           {rakija.abv && <Row label="Алкохол" value={`${rakija.abv}%`} />}
@@ -236,6 +185,8 @@ export default async function RakijaPage({ params }: { params: { id: string } })
           </div>
         )}
       </div>
+      </section>
+      <BottomNav />
     </div>
   );
 }

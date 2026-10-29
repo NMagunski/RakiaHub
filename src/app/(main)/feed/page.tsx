@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import BalkanMap from "@/components/design/BalkanMap";
+import BotanicalSprig from "@/components/design/BotanicalSprig";
 import { createClient } from "@/lib/supabase/client";
 import { getFeed, getReactionCounts, type FeedRating, type Reactor } from "@/lib/queries/feed";
 import RatingCard from "@/components/feed/RatingCard";
@@ -9,6 +12,8 @@ const PULL_THRESHOLD = 72;
 
 export default function FeedPage() {
   const supabase = createClient();
+  const [scope, setScope] = useState<"friends" | "mine">("friends");
+  const revision = useRef(0);
   const [error, setError] = useState("");
   const [items, setItems] = useState<FeedRating[]>([]);
   const [reactionMap, setReactionMap] = useState<Record<string, { count: number; user_reacted: boolean; reactors: Reactor[] }>>({});
@@ -21,37 +26,41 @@ export default function FeedPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   async function deleteRating(id: string) {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    await fetch("/api/ratings", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+    const response = await fetch("/api/ratings", {
+      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
     });
+    if (!response.ok) throw new Error("Delete failed");
+    setItems(prev => prev.filter(item => item.id !== id));
   }
 
   const load = useCallback(async (isRefresh = false) => {
+    const request = ++revision.current;
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
     setError("");
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) setUserId(user.id);
+      if (!user) throw new Error("Unauthorized");
+      if (request !== revision.current) return;
+      setUserId(user.id);
 
-      const feed = await getFeed(supabase);
+      const feed = await getFeed(supabase, scope, user.id);
       const reactions = await getReactionCounts(supabase, feed.map((i) => i.id));
+      if (request !== revision.current) return;
       setItems(feed);
       setReactionMap(reactions);
     } catch {
-      setError("Потокът не беше зареден. Опитай отново.");
+      if (request === revision.current) setError("Наздравиците не бяха заредени. Опитай отново.");
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (request === revision.current) { setLoading(false); setRefreshing(false); }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [scope]);
 
-  useEffect(() => { load(); }, [load]);
+  // This ref is a request generation counter, not a DOM ref.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); return () => { revision.current++; }; }, [load]);
 
   useEffect(() => {
     const onRatingSaved = () => load(true);
@@ -96,7 +105,11 @@ export default function FeedPage() {
   }, [pullY, load]);
 
   return (
-    <div ref={containerRef} className="flex flex-col">
+    <div ref={containerRef} className="nazdravitsi-page">
+      <BotanicalSprig className="feed-botanical" />
+      <header className="nazdravitsi-heading"><div><p className="login-kicker">СПОДЕЛЕНИ МОМЕНТИ</p><h1>Наздравици</h1><p>Споделени вкусове и нови истории.</p></div><Link href="/discover">Открий нова ракия →</Link></header>
+      <div className="nazdravitsi-layout"><section aria-label="Дегустации" className="nazdravitsi-main">
+      <div className="feed-tabs" role="group" aria-label="Чии наздравици">{([['friends','Приятели'],['mine','Моите']] as const).map(([id,label]) => <button key={id} aria-pressed={scope === id} onClick={() => setScope(id)}>{label}</button>)}</div>
       {error && <div className="card m-4 p-4" role="alert">{error} <button className="underline" onClick={()=>load()}>Повтори</button></div>}
       {/* Pull-to-refresh indicator */}
       <div
@@ -106,15 +119,15 @@ export default function FeedPage() {
         <div className={`h-5 w-5 rounded-full border-2 border-accent border-t-walnut ${refreshing || pullY >= PULL_THRESHOLD ? "animate-spin" : ""}`} />
       </div>
 
-      <div className="flex flex-col gap-3 px-4 py-4">
+      <div className="feed-cards" aria-busy={loading || refreshing}>
         {loading ? (
-          <FeedSkeleton />
-        ) : items.length === 0 ? (
-          <EmptyFeed />
+          <><span role="status" className="sr-only">Зареждане на наздравици…</span><FeedSkeleton /></>
+        ) : error ? null : items.length === 0 ? (
+          <EmptyFeed mine={scope === "mine"} />
         ) : (
           items.map((item) => (
             <RatingCard
-              key={item.id}
+              key={`${item.id}:${reactionMap[item.id]?.count}:${reactionMap[item.id]?.user_reacted}`}
               rating={item}
               reactions={reactionMap[item.id] ?? { count: 0, user_reacted: false, reactors: [] }}
               currentUserId={userId ?? ""}
@@ -123,6 +136,7 @@ export default function FeedPage() {
           ))
         )}
       </div>
+      </section><aside className="feed-sidebar"><section><h2>Моят паспорт</h2><BalkanMap decorative className="feed-passport-map" /><p>Всяка дегустация е нова страница в твоето пътешествие.</p><Link href="/passport">Отвори паспорта →</Link></section><section><h2>Намери приятели</h2><p>Свържи се с хора, които споделят твоя вкус.</p><Link href="/friends">Намери приятели →</Link></section></aside></div>
     </div>
   );
 }
@@ -156,14 +170,6 @@ function FeedSkeleton() {
   );
 }
 
-function EmptyFeed() {
-  return (
-    <div className="mt-16 flex flex-col items-center gap-3 text-center px-6">
-      <span className="text-5xl">🥃</span>
-      <p className="text-lg font-semibold text-oak">Добре дошъл в RAKIQ!</p>
-      <p className="text-sm text-walnut">
-        Натисни бутилката долу вдясно и оцени първата си напитка.
-      </p>
-    </div>
-  );
+function EmptyFeed({ mine }: { mine: boolean }) {
+  return <div className="feed-empty"><span aria-hidden="true">🥂</span><h2>{mine ? "Твоите наздравици започват тук" : "Още няма наздравици от приятели"}</h2><p>{mine ? "Оцени първата си ракия и запази спомена в паспорта." : "Намери приятели и виж техните споделени дегустации."}</p><Link href={mine ? "/discover" : "/friends"}>{mine ? "Открий ракия →" : "Намери приятели →"}</Link></div>;
 }

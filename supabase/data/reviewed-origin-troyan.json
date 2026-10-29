@@ -1,0 +1,9 @@
+{
+  "source": "https://www.mi.government.bg/file/2013/09/zapoved_troian2_td.pdf",
+  "evidence": "Published production specification identifies Vinprom Troyan and the Troyan production area for Troyanska plum brandy. Locality point only; no official GI polygon is represented.",
+  "country_id": "BG",
+  "region_id": "geonames:726320",
+  "producer": "Винпром Троян",
+  "fruit": "plum",
+  "product_ids": ["2c7e90e8-1291-4e76-af2e-aea2594ac98e","3adf54ac-f7fb-401d-af60-665570a3c3c3","5377573d-bb73-4cac-b44e-22271444ae26","5f04b461-fa0c-4577-89b6-568e3496b718","66781821-197b-4512-8150-2fd774599d87","6ec0d8e4-de98-4bad-a104-9f17d54d6291","915b3514-034f-4668-8d06-08b8ba9ea34b","93f4a34a-46d7-4dd0-a13c-40727a1b5dbd","a8f8bd3e-a9b5-4fd6-8020-3968bff3d777","b84775cd-1ba1-4ab5-a3e8-48d1bae5c0b2","d0d2baac-9d78-4102-8f7b-f0bcb737e5a1"]
+}

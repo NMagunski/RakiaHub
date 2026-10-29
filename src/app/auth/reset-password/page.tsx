@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
     setSaving(false);
     if (error) { setError(error.message); return; }
     setDone(true);
-    setTimeout(() => router.push("/feed"), 2000);
+    setTimeout(() => router.push("/discover"), 2000);
   }
 
   return (

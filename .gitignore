@@ -11,6 +11,9 @@
 
 # next.js
 /.next/
+/.next-dev/
+/.next-test/
+/.next-social-test/
 /out/
 
 # production
@@ -46,3 +49,6 @@ doc/18.png
 doc/19.png
 doc/20.png
 doc/21.png
+
+# Private local database backup artifacts
+/.backups/

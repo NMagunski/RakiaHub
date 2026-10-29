@@ -1,4 +1,4 @@
-const CACHE_NAME = "rakiq-v3";
+const CACHE_NAME = "rakiq-v4";
 const OFFLINE_URL = "/offline";
 
 const STATIC_ASSETS = [
@@ -29,6 +29,9 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
+
+  // Never cache mutable Next dev chunks (app/layout.js, webpack.js, etc.).
+  if (url.pathname.startsWith("/_next/") && !/-[a-f0-9]{8,}\.(?:js|css)$/.test(url.pathname)) return;
 
   // Cache-first for static assets (Next.js chunks, icons, manifest)
   if (

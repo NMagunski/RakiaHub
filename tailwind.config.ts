@@ -19,8 +19,8 @@ const config: Config = {
         muted:      "rgb(var(--muted) / <alpha-value>)",
       },
       fontFamily: {
-        sans:  ["Inter", "system-ui", "sans-serif"],
-        serif: ["Playfair Display", "Georgia", "serif"],
+        sans:  ["var(--font-body)", "system-ui", "sans-serif"],
+        serif: ["var(--font-editorial)", "Georgia", "serif"],
       },
       boxShadow: {
         "card":         "0 1px 3px rgba(44,24,16,0.06), 0 4px 16px rgba(44,24,16,0.08)",

@@ -17,12 +17,22 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  async function usernameAvailable() {
+    const response = await fetch("/api/auth/username", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Проверката на потребителското име не успя.");
+    return result.available === true;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (username.length < 3) {
-      setError("Потребителското име трябва да е поне 3 символа.");
+    if (username.length < 3 || username.length > 32) {
+      setError("Потребителското име трябва да е между 3 и 32 символа.");
       return;
     }
     if (!/^[a-z0-9_]+$/.test(username)) {
@@ -33,6 +43,11 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      if (!await usernameAvailable()) {
+        setError("Това потребителско име вече е заето. Избери друго.");
+        setLoading(false);
+        return;
+      }
       // Pass username in metadata — the DB trigger reads it directly
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -43,6 +58,12 @@ export default function RegisterPage() {
       if (signUpError) {
         if (signUpError.message.includes("already registered")) {
           setError("Вече има регистриран акаунт с този имейл.");
+        } else if (signUpError.message.includes("Database error saving new user")) {
+          // A concurrent signup can claim the name after the initial check.
+          const available = await usernameAvailable().catch(() => true);
+          setError(available
+            ? "Регистрацията не беше записана поради грешка в базата. Опитай отново."
+            : "Това потребителско име вече е заето. Избери друго.");
         } else {
           setError(signUpError.message);
         }
@@ -64,7 +85,7 @@ export default function RegisterPage() {
       // If session exists (email confirmation disabled) — go directly to feed
       // If no session — user needs to confirm email first
       if (data.session) {
-        router.push("/feed");
+        router.push("/discover");
         router.refresh();
       } else {
         setError(null);
@@ -107,6 +128,7 @@ export default function RegisterPage() {
                 id="username"
                 type="text"
                 autoComplete="username"
+                maxLength={32}
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}

@@ -1,45 +1,4 @@
 import Link from "next/link";
-
-export default function AppHeader() {
-  return (
-    <header
-      className="sticky top-0 z-30 safe-top"
-      style={{
-        background: "rgb(var(--background) / .94)",
-        backdropFilter: "blur(20px) saturate(1.8)",
-        WebkitBackdropFilter: "blur(20px) saturate(1.8)",
-        borderBottom: "1px solid rgba(44,24,16,0.07)",
-        boxShadow: "0 1px 12px rgba(44,24,16,0.05)",
-      }}
-    >
-      <div className="flex items-center justify-center gap-2.5 px-4 py-3.5">
-        {/* Bottle icon */}
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl"
-          style={{ background: "linear-gradient(135deg, rgb(var(--walnut)) 0%, rgb(var(--oak)) 100%)" }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
-            <path
-              d="M9 3h6M10 3v2.5c0 .5-.4 1-.9 1.4L7.5 8.5V20a1 1 0 001 1h7a1 1 0 001-1V8.5L14.9 6.9C14.4 6.5 14 6 14 5.5V3"
-              stroke="rgb(var(--cream))"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M7.5 14h9" stroke="rgb(var(--cream))" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </div>
-
-        <div className="flex flex-col items-start leading-none">
-          <span className="font-serif font-bold tracking-tight text-oak" style={{ fontSize: "1.2rem", lineHeight: 1.2 }}>
-            RAKIQ
-          </span>
-          <span className="text-[10px] font-medium tracking-widest uppercase" style={{ color: "rgb(var(--muted))", letterSpacing: "0.12em" }}>
-            Оцени · Сподели · Наздраве
-          </span>
-        </div>
-        <Link href="/passport" className="ml-auto rounded-full border border-accent/30 px-3 py-2 text-xs font-semibold text-walnut">Паспорт ↗</Link>
-      </div>
-    </header>
-  );
+export default function AppHeader(){
+ return <header className="app-header"><div className="app-header-inner"><Link href="/discover" className="wordmark" aria-label="RAKIQ — Открий">RAKIQ</Link><nav aria-label="Бърз достъп" className="header-actions"><Link href="/friends" aria-label="Приятели" className="header-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 5"/></svg></Link><Link href="/passport" className="header-passport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.3"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="10" r="4"/><path d="M8 17h8m-4-11c3 3 3 5 0 8-3-3-3-5 0-8Z"/></svg><span>Паспорт</span></Link></nav></div></header>;
 }

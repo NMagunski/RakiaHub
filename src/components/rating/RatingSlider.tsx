@@ -12,13 +12,14 @@ export default function RatingSlider({ value, onChange }: Props) {
     <div className="flex flex-col items-center gap-4">
       {/* Big score display */}
       <div className="flex items-baseline gap-1">
-        <span className="text-6xl font-bold text-gold tabular-nums">{value.toFixed(1)}</span>
+        <span className="font-serif text-6xl font-medium text-gold tabular-nums">{value.toFixed(1)}</span>
         <span className="text-lg text-accent">/10</span>
       </div>
 
       {/* Range input */}
       <div className="relative w-full px-1">
         <input
+          aria-label="Оценка от 1 до 10"
           type="range"
           min={1}
           max={10}
@@ -26,6 +27,7 @@ export default function RatingSlider({ value, onChange }: Props) {
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           className="slider w-full"
+          style={{ "--val": value } as React.CSSProperties}
         />
         {/* Tick marks */}
         <div className="mt-1 flex justify-between px-0.5">

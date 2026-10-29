@@ -7,17 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 
 const TABS = [
   {
-    href: "/feed",
-    label: "Фийд",
-    icon: (active: boolean) => (
-      <svg viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} className="h-6 w-6">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/>
-      </svg>
-    ),
-  },
-  {
     href: "/discover",
-    label: "Търсене",
+    label: "Открий",
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.4 : 1.8} className="h-6 w-6">
         <circle cx="11" cy="11" r="7"/>
@@ -26,8 +17,17 @@ const TABS = [
     ),
   },
   {
-    href: "/wishlist",
-    label: "Списък",
+    href: "/feed",
+    label: "Наздравици",
+    icon: (active: boolean) => (
+      <svg viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? 0 : 1.8} className="h-6 w-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/>
+      </svg>
+    ),
+  },
+  {
+    href: "/passport",
+    label: "Паспорт",
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
         <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
@@ -89,7 +89,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 safe-bottom"
+      className="bottom-nav fixed bottom-0 left-0 right-0 z-40 safe-bottom"
       style={{
         background: "rgb(var(--background) / .94)",
         backdropFilter: "blur(24px) saturate(1.8)",
@@ -98,26 +98,17 @@ export default function BottomNav() {
         boxShadow: "0 -1px 0 rgba(44,24,16,0.05), 0 -4px 20px rgba(44,24,16,0.05)",
       }}
     >
-      <div className="flex items-center justify-around px-1 py-1.5">
+      <div className="bottom-nav-inner">
         {TABS.map((tab) => {
           const active = pathname.startsWith(tab.href);
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className="relative flex flex-col items-center gap-0.5 min-w-[64px] py-1.5 px-3 rounded-2xl transition-all duration-200"
-              style={{ background: active ? "rgba(107,68,35,0.12)" : "transparent" }}
+              className={`nav-tab ${active ? "active" : ""}`}
+              aria-current={active ? "page" : undefined}
             >
-              {/* Active indicator — always in DOM, opacity driven */}
-              <span
-                className="absolute top-1.5 h-1 w-5 rounded-full transition-opacity duration-200"
-                style={{
-                  background: "linear-gradient(90deg, rgb(var(--walnut)), rgb(var(--oak)))",
-                  opacity: active ? 1 : 0,
-                }}
-              />
-
-              <span className={`mt-2 transition-colors duration-200 ${active ? "text-walnut" : "text-muted"}`}>
+              <span className={`transition-colors duration-200 ${active ? "text-walnut" : "text-muted"}`}>
                 {tab.icon(active)}
               </span>
 

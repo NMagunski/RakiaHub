@@ -9,7 +9,11 @@
     "lint": "next lint",
     "test:db": "node tests/database.mjs",
     "test:browser": "node tests/browser.mjs",
-    "test": "node tests/database.mjs && node tests/passport.mjs && node tests/service-worker.mjs"
+    "test": "node tests/database.mjs && node tests/passport.mjs && node tests/service-worker.mjs && node tests/username-availability.mjs",
+    "auth:set-password": "node --env-file=.env.local scripts/set-user-password.mjs",
+    "test:password-reset": "node tests/password-reset.mjs",
+    "test:api": "node tests/api-upgrade.mjs",
+    "test:social-auth": "node tests/auth-redirect.mjs && node tests/social-auth.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",

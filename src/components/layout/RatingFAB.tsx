@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { usePathname } from "next/navigation";
 
 const RatingBottomSheet = dynamic(() => import("@/components/rating/RatingBottomSheet"), {
   ssr: false,
 });
 
 export default function RatingFAB() {
+  const passport = usePathname().startsWith("/passport");
   const [open, setOpen] = useState(false);
   const [tilted, setTilted] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
@@ -38,13 +40,13 @@ export default function RatingFAB() {
       <button
         onClick={handleClick}
         aria-label="Добави оценка"
-        className="fixed bottom-20 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-walnut shadow-lg transition-transform active:scale-95"
+        className={`rating-fab ${passport ? "passport-add" : ""}`}
         style={{
           transform: tilted ? "rotate(-25deg)" : "rotate(0deg)",
           transition: "transform 0.35s cubic-bezier(.36,.07,.19,.97)",
         }}
       >
-        <BottleIcon />
+        <BottleIcon />{passport && <span>Добави ракия</span>}
       </button>
 
       {open && <RatingBottomSheet onClose={() => { setOpen(false); setInitialQuery(""); }} initialQuery={initialQuery} />}

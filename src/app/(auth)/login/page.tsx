@@ -3,6 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ThemePicker from "@/components/theme/ThemePicker";
+import styles from "@/components/design/LoginWorld.module.css";
+import LoginScenery from "@/components/design/LoginScenery";
+import { safeReturnPath } from "@/lib/auth/redirect";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -19,24 +23,28 @@ export default function LoginPage() {
 
   async function handleForgot(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setError(null);
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-    setLoading(false);
-    if (error) { setError(error.message); return; }
-    setForgotSent(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      if (error) { setError("Не успяхме да изпратим линка. Опитай отново."); return; }
+      setForgotSent(true);
+    } catch { setError("Връзката не успя. Опитай отново."); }
+    finally { setLoading(false); }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setError(null);
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError("Невалиден имейл или парола."); setLoading(false); return; }
-      router.push("/feed");
+      router.push(safeReturnPath(new URLSearchParams(window.location.search).get("next")));
       router.refresh();
     } catch (err) {
       setError("Неочаквана грешка: " + (err instanceof Error ? err.message : String(err)));
@@ -45,45 +53,12 @@ export default function LoginPage() {
   }
 
   return (
-    <main
-      className="flex min-h-screen flex-col"
-      style={{
-        background: "linear-gradient(175deg, #F5EAD5 0%, rgb(var(--background)) 45%, rgb(var(--background)) 100%)",
-      }}
-    >
-      {/* Hero */}
-      <div className="flex flex-col items-center justify-center px-6 pt-16 pb-10">
-        {/* Logo mark */}
-        <div
-          className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
-          style={{
-            background: "linear-gradient(145deg, rgb(var(--walnut)) 0%, rgb(var(--oak)) 100%)",
-            boxShadow: "0 8px 32px rgba(107,68,35,0.35), 0 2px 8px rgba(44,24,16,0.20)",
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" className="h-9 w-9" aria-hidden>
-            <path
-              d="M9 3h6M10 3v2.5c0 .5-.4 1-.9 1.4L7.5 8.5V20a1 1 0 001 1h7a1 1 0 001-1V8.5L14.9 6.9C14.4 6.5 14 6 14 5.5V3"
-              stroke="rgb(var(--cream))"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path d="M7.5 14h9" stroke="rgb(var(--cream))" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </div>
-
-        <h1 className="font-serif font-bold text-oak text-center" style={{ fontSize: "1.75rem", lineHeight: 1.25 }}>
-          Открий вкуса<br />на България
-        </h1>
-        <p className="mt-2 text-center text-sm font-medium" style={{ color: "rgb(var(--muted))" }}>
-          Оцени, събери и сподели всяка глътка ракия
-        </p>
-      </div>
-
-      {/* Form card */}
-      <div className="flex-1 rounded-t-3xl px-6 pt-8 pb-10" style={{ background: "#FFFFFF", boxShadow: "0 -4px 40px rgba(44,24,16,0.08)" }}>
-
+    <main className={styles.world}>
+      <header className={styles.topbar}><Link href="/login" className="wordmark">RAKIQ</Link><ThemePicker compact /></header>
+      <LoginScenery />
+      <div className={styles.center}>
+        <header className={styles.intro}><p className="login-kicker">ОТКРИВАЙ · СПОДЕЛЯЙ · ЗАПАЗВАЙ</p><h1>Твоят ракиен свят.</h1><span className="editorial-rule" aria-hidden="true">◇</span><p>Вкусове, места и наздравици.</p></header>
+        <section className={styles.panel} aria-label={forgotMode ? "Възстановяване на парола" : "Вход в RAKIQ"}>
         {/* Forgot password mode */}
         {forgotMode && (
           forgotSent ? (
@@ -93,9 +68,9 @@ export default function LoginPage() {
                   <path d="M20 6L9 17l-5-5"/>
                 </svg>
               </div>
-              <p className="font-semibold text-oak">Провери имейла си</p>
+              <p role="status" className="font-semibold text-oak">Провери имейла си</p>
               <p className="text-sm text-muted">Изпратихме линк за възстановяване на паролата.</p>
-              <button onClick={() => { setForgotMode(false); setForgotSent(false); }} className="text-sm font-semibold text-walnut underline underline-offset-2">
+              <button disabled={loading} onClick={() => { setForgotMode(false); setForgotSent(false); }} className="text-sm font-semibold text-walnut underline underline-offset-2">
                 Обратно към вход
               </button>
             </div>
@@ -117,14 +92,14 @@ export default function LoginPage() {
                 />
               </div>
               {error && (
-                <div className="rounded-xl px-4 py-3 text-sm" style={{ background: "rgba(192,57,43,0.08)", color: "#9B2C2C" }}>
+                <div className="rounded-xl px-4 py-3 text-sm" role="alert" style={{ background: "rgba(192,57,43,0.08)", color: "#9B2C2C" }}>
                   {error}
                 </div>
               )}
               <button type="submit" disabled={loading} className="btn-primary">
                 {loading ? "Изпращане…" : "Изпрати линк"}
               </button>
-              <button type="button" onClick={() => { setForgotMode(false); setError(null); }} className="text-sm text-muted underline underline-offset-2">
+              <button type="button" disabled={loading} onClick={() => { setForgotMode(false); setError(null); }} className="text-sm text-muted underline underline-offset-2">
                 Обратно към вход
               </button>
             </form>
@@ -152,7 +127,7 @@ export default function LoginPage() {
           <div>
             <div className="mb-1.5 flex items-center justify-between">
               <label className="label mb-0" htmlFor="password">Парола</label>
-              <button type="button" onClick={() => { setForgotMode(true); setError(null); }} className="text-xs font-medium text-walnut underline underline-offset-2">
+              <button type="button" disabled={loading} onClick={() => { setForgotMode(true); setError(null); }} className="text-xs font-medium text-walnut underline underline-offset-2">
                 Забравена парола?
               </button>
             </div>
@@ -192,7 +167,7 @@ export default function LoginPage() {
           {/* Error */}
           {error && (
             <div
-              className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
+              role="alert" className="flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm"
               style={{ background: "rgba(192,57,43,0.08)", border: "1px solid rgba(192,57,43,0.18)", color: "#9B2C2C" }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 mt-0.5 shrink-0">
@@ -232,6 +207,7 @@ export default function LoginPage() {
             </Link>
           </p>
         )}
+        </section>
       </div>
     </main>
   );
